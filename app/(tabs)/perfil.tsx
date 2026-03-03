@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, borderRadius } from '@/config/theme';
-import { getMe, getSuscripcion, logoutUser, clearSession } from '@/services/api';
+import { getMe, logoutUser, clearSession } from '@/services/api';
 
 type ProfileUser = {
   id: string;
@@ -13,6 +14,7 @@ type ProfileUser = {
   rol?: string;
   bio?: string;
   ubicacion?: string;
+  whatsapp?: string;
   rating?: number;
   operaciones?: number;
   anunciosActivos?: number;
@@ -21,20 +23,18 @@ type ProfileUser = {
 
 export default function PerfilScreen() {
   const [user, setUser] = useState<ProfileUser | null>(null);
-  const [suscripcionActiva, setSuscripcionActiva] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const [meRes, subRes] = await Promise.all([getMe(), getSuscripcion()]);
+        const meRes = await getMe();
         if (meRes.success && meRes.user) {
           setUser(meRes.user as ProfileUser);
         } else if ((meRes as { success?: boolean }).success === false && ((meRes as { message?: string }).message?.includes('Sesión') || (meRes as { message?: string }).message?.includes('inválida'))) {
           setUser(null);
         }
-        if (subRes.success && subRes.data?.activa) setSuscripcionActiva(true);
       } catch {
         setUser(null);
       } finally {
@@ -97,7 +97,11 @@ export default function PerfilScreen() {
         <Text style={styles.title}>Mi Perfil</Text>
         <View style={styles.profileCard}>
           <View style={styles.avatarWrap}>
-            <View style={styles.avatar} />
+            {user.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatar} />
+            )}
             <View style={styles.onlineDot} />
           </View>
           <Text style={styles.userName}>{user.nombre ?? 'Usuario'}</Text>
@@ -142,16 +146,19 @@ export default function PerfilScreen() {
             <Text style={styles.locationText}>{user.ubicacion}</Text>
           </View>
         ) : null}
+        {user.whatsapp ? (
+          <View style={styles.locationRow}>
+            <Ionicons name="logo-whatsapp" size={16} color={colors.success} />
+            <Text style={styles.locationText}>{user.whatsapp}</Text>
+          </View>
+        ) : null}
         <Text style={styles.sectionLabel}>CUENTA</Text>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="settings-outline" size={22} color={colors.text} />
-          <Text style={styles.menuItemText}>Configuración</Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="shield-checkmark-outline" size={22} color={colors.primary} />
-          <Text style={styles.menuItemText}>Suscripción</Text>
-          {suscripcionActiva ? <Text style={styles.menuItemBadge}>Activa</Text> : null}
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => router.push('/editar-perfil')}
+        >
+          <Ionicons name="create-outline" size={22} color={colors.text} />
+          <Text style={styles.menuItemText}>Editar perfil</Text>
           <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} disabled={loggingOut}>

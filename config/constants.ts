@@ -11,6 +11,26 @@ export const METALS = [
   'Otro',
 ] as const;
 
+export const METAL_GROUPS = [
+  { id: 'cobre', label: 'Cobre', variants: ['1ra', '2da'] },
+  { id: 'bronce', label: 'Bronce', variants: ['Colorado', 'Latón', 'Trafilado', 'Común'] },
+  { id: 'aluminios', label: 'Aluminios', variants: ['Blando', 'Llantas', 'Duro', 'Latitas', 'Perfil'] },
+  { id: 'estannado', label: 'Estañado', variants: ['Calefón'] },
+  { id: 'plomo', label: 'Plomo', variants: ['Balanceo', 'Cañería'] },
+  { id: 'baterias', label: 'Baterías', variants: ['Secas', 'Llenas', 'De gel'] },
+  { id: 'bochas', label: 'Bochas' },
+  { id: 'niquel', label: 'Níquel' },
+  { id: 'radiador', label: 'Radiador', variants: ['Mixtos', 'Panel de bronce', 'Aluminio'] },
+  { id: 'pasta', label: 'Pasta' },
+  { id: 'viruta', label: 'Viruta', variants: ['Aluminio', 'Bronce', 'Hierro'] },
+  { id: 'chatarra_electronica', label: 'Chatarra electrónica' },
+  { id: 'mercurio', label: 'Mercurio' },
+  { id: 'maquinarias', label: 'Maquinarias en desuso' },
+  { id: 'hierro', label: 'Hierro', variants: ['Chatarra', 'Pesado', 'Chico'] },
+  { id: 'carton', label: 'Cartón', variants: ['Blanco', 'Afiche', 'Conos', 'Diarios'] },
+  { id: 'plastico', label: 'Plástico' },
+] as const;
+
 export const SORT_OPTIONS = [
   { id: 'recent', label: 'Más reciente' },
   { id: 'price_asc', label: 'Menor precio' },

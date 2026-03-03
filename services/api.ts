@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const STORAGE_SESSION = '@metalhub_session_id';
 
 const getBaseUrl = (): string => {
-  return 'http://localhost:3000';
+  return "https://metalhub-server.vercel.app/" // 'http://localhost:3000';
 };
 
 const getApiUrl = (path: string): string => {
@@ -46,7 +46,7 @@ export type ApiResponse<T = unknown> = {
   data?: T;
   message?: string;
   error?: string;
-  user?: { id: string; email: string; nombre: string; [k: string]: unknown };
+  user?: { id: string; email: string; nombre: string; whatsapp?: string; [k: string]: unknown };
   sessionId?: string;
 };
 
@@ -60,11 +60,17 @@ export function assertSuccess<T>(res: ApiResponse<T>): asserts res is ApiRespons
 
 // ——— Auth ———
 
-export async function registerUser(email: string, password: string, nombre: string): Promise<ApiResponse> {
+export async function registerUser(
+  email: string,
+  password: string,
+  nombre: string,
+  avatarUrl?: string,
+  whatsapp?: string,
+): Promise<ApiResponse> {
   const res = await fetch(getApiUrl('/api/v1/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, nombre }),
+    body: JSON.stringify({ email, password, nombre, avatarUrl, whatsapp }),
   });
   return res.json();
 }
@@ -93,7 +99,7 @@ export async function getMe(): Promise<ApiResponse & { user?: Record<string, unk
   return res.json();
 }
 
-export async function updateMe(body: { nombre?: string; bio?: string; ubicacion?: string; avatarUrl?: string }): Promise<ApiResponse> {
+export async function updateMe(body: { nombre?: string; bio?: string; ubicacion?: string; avatarUrl?: string; whatsapp?: string }): Promise<ApiResponse> {
   const headers = await authHeaders();
   const res = await fetch(getApiUrl('/api/v1/users/me'), {
     method: 'PUT',
@@ -126,8 +132,9 @@ export type PublicacionItem = {
   descripcion?: string;
   entrega?: string;
   ubicacion?: string;
-  usuario?: { id: string; nombre: string; rating?: number; ubicacion?: string; verificado?: boolean; whatsapp?: string };
+  usuario?: { id: string; nombre: string; rating?: number; ubicacion?: string; verificado?: boolean; whatsapp?: string; avatarUrl?: string };
   urgente?: boolean;
+  cerrada?: boolean;
   creadoEn: string;
 };
 
@@ -147,8 +154,9 @@ export async function getPublicaciones(params: PublicacionListParams = {}): Prom
   return res.json();
 }
 
-export async function getPublicacionById(id: string): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
-  const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`));
+export async function getPublicacionById(id: string): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem } & { esPropia?: boolean }> {
+  const headers = await authHeaders();
+  const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), { headers });
   return res.json();
 }
 

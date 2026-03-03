@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '@/config/theme';
@@ -81,8 +82,8 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1, padding: spacing.lg, paddingTop: spacing.xl },
-  iconWrap: { alignItems: 'center', marginBottom: spacing.xl },
-  icon: { width: 120, height: 120, borderRadius: 28 },
+  iconWrap: { alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.xl },
+  icon: { width: 160, height: 160, borderRadius: 36 },
   title: { fontSize: 28, fontWeight: '700', color: colors.text, marginBottom: 8 },
   subtitle: { color: colors.textSecondary, marginBottom: spacing.xl },
   input: { backgroundColor: colors.input, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, color: colors.text, fontSize: 16, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },

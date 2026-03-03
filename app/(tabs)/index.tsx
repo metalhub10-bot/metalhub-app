@@ -6,19 +6,21 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
-  SafeAreaView,
   Linking,
   Alert,
   RefreshControl,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ListingCard, ListingCardProps } from '@/components/ListingCard';
 import { FilterTabs } from '@/components/FilterTabs';
 import { SearchBar } from '@/components/SearchBar';
-import { colors, spacing } from '@/config/theme';
-import { SORT_OPTIONS } from '@/config/constants';
+import { colors, spacing, borderRadius } from '@/config/theme';
+import { SORT_OPTIONS, METAL_GROUPS } from '@/config/constants';
 import {
   getPublicaciones,
   formatTimeAgo,
@@ -41,11 +43,13 @@ function mapPublicacionToCard(p: PublicacionItem): ListingCardProps {
     description: p.descripcion ?? '',
     userName: p.usuario?.nombre ?? '',
     rating: String(p.usuario?.rating ?? 0),
-    location: p.usuario?.ubicacion ?? '',
+    location: p.ubicacion ?? p.usuario?.ubicacion ?? '',
     verified: p.usuario?.verificado ?? false,
     urgent: p.urgente ?? false,
     timeAgo: formatTimeAgo(p.creadoEn),
     whatsappNumber: p.usuario?.whatsapp,
+    avatarUrl: p.usuario?.avatarUrl,
+    closed: p.cerrada ?? false,
   };
 }
 
@@ -53,6 +57,7 @@ export default function MercadoScreen() {
   const [filter, setFilter] = useState<FilterTab>('todos');
   const [search, setSearch] = useState('');
   const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [filtersModalVisible, setFiltersModalVisible] = useState(false);
   const [sortId, setSortId] = useState('recent');
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [contactListing, setContactListing] = useState<ListingCardProps | null>(null);
@@ -60,6 +65,12 @@ export default function MercadoScreen() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [metalCategoryFilter, setMetalCategoryFilter] = useState<string | null>(null);
+  const [metalSubtypeFilter, setMetalSubtypeFilter] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState('');
+  const [tempMetalCategoryFilter, setTempMetalCategoryFilter] = useState<string | null>(null);
+  const [tempMetalSubtypeFilter, setTempMetalSubtypeFilter] = useState<string | null>(null);
+  const [tempLocationFilter, setTempLocationFilter] = useState('');
 
   const ordenMap: Record<string, 'reciente' | 'precio_asc' | 'precio_desc' | 'volumen'> = {
     recent: 'reciente',
@@ -74,10 +85,24 @@ export default function MercadoScreen() {
     else setLoading(true);
     try {
       const tipo = filter === 'todos' ? undefined : filter;
+
+      let metalQuery: string | undefined;
+      if (metalCategoryFilter) {
+        const group = METAL_GROUPS.find((g) => g.id === metalCategoryFilter);
+        if (group) {
+          if (group.variants && group.variants.length > 0 && metalSubtypeFilter) {
+            metalQuery = `${group.label} - ${metalSubtypeFilter}`;
+          } else {
+            metalQuery = group.label;
+          }
+        }
+      }
       const res = await getPublicaciones({
         tipo,
         orden: ordenMap[sortId] ?? 'reciente',
         busqueda: search.trim() || undefined,
+        metal: metalQuery,
+        ubicacion: locationFilter.trim() || undefined,
         limite: 50,
       });
       if (res.success && Array.isArray(res.data)) {
@@ -95,13 +120,38 @@ export default function MercadoScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filter, sortId, search]);
+  }, [filter, sortId, search, metalCategoryFilter, metalSubtypeFilter, locationFilter]);
 
+  // Cargar al montar (primera vez)
   React.useEffect(() => {
     fetchListings();
   }, [fetchListings]);
 
+  // Actualizar badge del tab con el total de ofertas
+  const navigation = useNavigation();
+  React.useEffect(() => {
+    navigation.setOptions({
+      tabBarBadge: total > 0 ? total : undefined,
+    });
+  }, [navigation, total]);
+
+  // Refrescar cada vez que la pestaña vuelve a estar en foco
+  useFocusEffect(
+    useCallback(() => {
+      fetchListings(true);
+    }, [fetchListings])
+  );
+
   const sortLabel = SORT_OPTIONS.find((s) => s.id === sortId)?.label ?? 'Más reciente';
+
+  const connectedCount = React.useMemo(() => {
+    const ids = new Set<string>();
+    for (const pub of listings) {
+      const id = pub.usuario?.id;
+      if (id) ids.add(id);
+    }
+    return ids.size;
+  }, [listings]);
 
   const handleContactPress = (item: ListingCardProps) => {
     setContactListing(item);
@@ -146,7 +196,9 @@ export default function MercadoScreen() {
             <View style={styles.headerBadges}>
               <View style={styles.badgePillGreen}>
                 <View style={styles.badgeDot} />
-                <Text style={styles.badgeGreenText}>5 conectados</Text>
+                <Text style={styles.badgeGreenText}>
+                  {connectedCount} conectados
+                </Text>
               </View>
               <View style={styles.badgePillYellow}>
                 <Ionicons name="pulse" size={12} color={colors.primary} />
@@ -155,10 +207,15 @@ export default function MercadoScreen() {
             </View>
           </View>
           <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconBtn}>
-              <Ionicons name="search" size={22} color={colors.text} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn}>
+            <TouchableOpacity
+              style={styles.iconBtn}
+              onPress={() => {
+                setTempMetalCategoryFilter(metalCategoryFilter);
+                setTempMetalSubtypeFilter(metalSubtypeFilter);
+                setTempLocationFilter(locationFilter);
+                setFiltersModalVisible(true);
+              }}
+            >
               <Ionicons name="options" size={22} color={colors.text} />
             </TouchableOpacity>
           </View>
@@ -219,6 +276,117 @@ export default function MercadoScreen() {
                 <Text style={[styles.sortOptionText, sortId === opt.id && styles.sortOptionTextActive]}>{opt.label}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal visible={filtersModalVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setFiltersModalVisible(false)}
+        >
+          <View style={styles.filtersModalContent}>
+            <Text style={styles.filtersTitle}>Filtros</Text>
+            <Text style={styles.filtersLabel}>Metal</Text>
+            <View style={styles.filtersMetalGrid}>
+              {METAL_GROUPS.map((group) => (
+                <TouchableOpacity
+                  key={group.id}
+                  style={[
+                    styles.filtersMetalChip,
+                    tempMetalCategoryFilter === group.id && styles.filtersMetalChipActive,
+                  ]}
+                  onPress={() => {
+                    setTempMetalCategoryFilter((current) =>
+                      current === group.id ? null : group.id
+                    );
+                    // Si cambiamos de grupo, reseteamos subtipo temp
+                    setTempMetalSubtypeFilter(null);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.filtersMetalChipText,
+                      tempMetalCategoryFilter === group.id && styles.filtersMetalChipTextActive,
+                    ]}
+                  >
+                    {group.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {tempMetalCategoryFilter &&
+              METAL_GROUPS.find((g) => g.id === tempMetalCategoryFilter)?.variants && (
+                <>
+                  <Text style={styles.filtersLabel}>Subtipo</Text>
+                  <View style={styles.filtersMetalGrid}>
+                    {METAL_GROUPS.find((g) => g.id === tempMetalCategoryFilter)!.variants!.map(
+                      (variant) => (
+                        <TouchableOpacity
+                          key={variant}
+                          style={[
+                            styles.filtersMetalChip,
+                            tempMetalSubtypeFilter === variant && styles.filtersMetalChipActive,
+                          ]}
+                          onPress={() =>
+                            setTempMetalSubtypeFilter((current) =>
+                              current === variant ? null : variant
+                            )
+                          }
+                        >
+                          <Text
+                            style={[
+                              styles.filtersMetalChipText,
+                              tempMetalSubtypeFilter === variant &&
+                                styles.filtersMetalChipTextActive,
+                            ]}
+                          >
+                            {variant}
+                          </Text>
+                        </TouchableOpacity>
+                      )
+                    )}
+                  </View>
+                </>
+              )}
+            <Text style={styles.filtersLabel}>Ubicación</Text>
+            <TextInput
+              style={styles.filtersInput}
+              placeholder="Ej: Buenos Aires, Rosario..."
+              placeholderTextColor={colors.textMuted}
+              value={tempLocationFilter}
+              onChangeText={setTempLocationFilter}
+            />
+            <View style={styles.filtersActions}>
+              <TouchableOpacity
+                style={styles.filtersClearButton}
+                onPress={() => {
+                  setTempMetalCategoryFilter(null);
+                  setTempMetalSubtypeFilter(null);
+                  setTempLocationFilter('');
+                  setMetalCategoryFilter(null);
+                  setMetalSubtypeFilter(null);
+                  setLocationFilter('');
+                  setFiltersModalVisible(false);
+                  fetchListings(true);
+                }}
+              >
+                <Text style={styles.filtersClearText}>Limpiar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filtersApplyButton}
+                onPress={() => {
+                  setMetalCategoryFilter(tempMetalCategoryFilter);
+                  setMetalSubtypeFilter(tempMetalSubtypeFilter);
+                  setLocationFilter(tempLocationFilter);
+                  setFiltersModalVisible(false);
+                  fetchListings(true);
+                }}
+              >
+                <Text style={styles.filtersApplyText}>Aplicar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -314,6 +482,68 @@ const styles = StyleSheet.create({
   sortOptionActive: { backgroundColor: 'rgba(240,185,11,0.15)' },
   sortOptionText: { color: colors.text, fontSize: 15 },
   sortOptionTextActive: { color: colors.primary, fontWeight: '600' },
+  filtersModalContent: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.sm,
+  },
+  filtersTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: spacing.xs },
+  filtersLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginTop: spacing.sm },
+  filtersInput: {
+    backgroundColor: colors.input,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    color: colors.text,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filtersMetalGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  filtersMetalChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  filtersMetalChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(240,185,11,0.1)',
+  },
+  filtersMetalChipText: { color: colors.text, fontSize: 13 },
+  filtersMetalChipTextActive: { color: colors.primary, fontWeight: '600' },
+  filtersActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  filtersClearButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filtersClearText: { color: colors.textSecondary, fontSize: 13 },
+  filtersApplyButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+  },
+  filtersApplyText: { color: '#0D0D0F', fontSize: 13, fontWeight: '600' },
   contactModalContent: { backgroundColor: '#fff', marginHorizontal: spacing.lg, marginTop: 200, borderRadius: 12, padding: spacing.lg },
   contactModalTitle: { fontSize: 18, fontWeight: '700', color: '#000', marginBottom: spacing.sm },
   contactModalBody: { color: '#333', fontSize: 14, marginBottom: spacing.lg },

@@ -1,22 +1,42 @@
-/**
- * MetalHub - Tema oscuro tipo Binance
- */
 export const colors = {
-  background: '#0D0D0F',
-  card: '#16161A',
-  cardElevated: '#1C1C21',
-  input: '#1C1C21',
-  text: '#FFFFFF',
-  textSecondary: '#8E8E93',
-  textMuted: '#636366',
-  primary: '#F0B90B',
-  primaryDark: '#C9950A',
+  // Fondos
+  background: '#0F1115',
+  card: '#171B22',
+  cardElevated: '#1E232B',
+  input: '#1E232B',
+
+  // Texto
+  text: '#EAECEF',
+  textSecondary: '#B7BDC6',
+  textMuted: '#5E6673',
+  textMeta: '#848E9C',
+  textDisabled: '#5E6673',
+
+  // Marca / primario metal
+  primary: '#D4A017',
+  primaryHover: '#E6B325',
+  primaryDark: '#B8860B',
+
+  // Estados compra / venta
   success: '#0ECB81',
+  successHover: '#1FD994',
+  successSoft: 'rgba(14,203,129,0.12)',
   danger: '#F6465D',
+  dangerHover: '#FF5C70',
+  dangerSoft: 'rgba(246,70,93,0.12)',
+
+  // Info
   info: '#3861FB',
   urgent: '#F0B90B',
-  border: '#2C2C2E',
-  borderLight: '#3A3A3C',
+
+  // Bordes / divisores
+  border: 'rgba(255,255,255,0.06)',
+  borderStrong: 'rgba(255,255,255,0.10)',
+  borderLight: 'rgba(255,255,255,0.06)',
+  divider: 'rgba(255,255,255,0.04)',
+
+  // Overlay suave para evitar negro plano (usar con gradients donde aplique)
+  overlaySoft: 'rgba(255,255,255,0.04)',
 };
 
 export const spacing = {
