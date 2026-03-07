@@ -1,8 +1,8 @@
 export const colors = {
-  // Fondos
+  // Fondos (cards más claras tipo Didi para contraste con el fondo)
   background: '#0F1115',
-  card: '#171B22',
-  cardElevated: '#1E232B',
+  card: '#252A32',
+  cardElevated: '#2D333D',
   input: '#1E232B',
 
   // Texto

@@ -253,13 +253,14 @@ export default function PublicacionDetalleScreen() {
         )}
 
         {isOwner && (
-          <View style={styles.ownerActionsRow}>
+          <View style={styles.ownerActions}>
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => router.push({ pathname: '/publicar/[id]', params: { id } })}
+              onPress={() => router.push({ pathname: '/editar-publicacion/[id]', params: { id: String(id) } })}
               activeOpacity={0.8}
             >
-              <Text style={styles.editButtonText}>Editar</Text>
+              <Ionicons name="create" size={22} color={colors.primary} />
+              <Text style={styles.editButtonText}>Editar publicación</Text>
             </TouchableOpacity>
             {!data.cerrada && (
               <TouchableOpacity
@@ -271,7 +272,10 @@ export default function PublicacionDetalleScreen() {
                 {updatingStatus ? (
                   <ActivityIndicator color="#0D0D0F" />
                 ) : (
-                  <Text style={styles.closeButtonText}>Marcar como completada</Text>
+                  <>
+                    <Ionicons name="checkmark-done" size={22} color="#0D0D0F" />
+                    <Text style={styles.closeButtonText}>Marcar como completada</Text>
+                  </>
                 )}
               </TouchableOpacity>
             )}
@@ -284,7 +288,10 @@ export default function PublicacionDetalleScreen() {
               {deleting ? (
                 <ActivityIndicator color={colors.danger} />
               ) : (
-                <Text style={styles.deleteButtonText}>Eliminar publicación</Text>
+                <>
+                  <Ionicons name="trash" size={22} color={colors.danger} />
+                  <Text style={styles.deleteButtonText}>Eliminar publicación</Text>
+                </>
               )}
             </TouchableOpacity>
           </View>
@@ -358,31 +365,33 @@ const styles = StyleSheet.create({
   contactButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   contactButtonDisabled: { backgroundColor: colors.card },
   contactButtonTextDisabled: { color: colors.textSecondary },
-  ownerActionsRow: {
+  ownerActions: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  editButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  closeButton: {
-    flex: 1,
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    borderWidth: 0,
-  },
-  closeButtonText: { color: '#0D0D0F', fontWeight: '600', fontSize: 14 },
-  editButton: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.primary,
     backgroundColor: 'rgba(240,185,11,0.12)',
   },
-  editButtonText: { color: colors.primary, fontWeight: '600', fontSize: 14 },
+  editButtonText: { color: colors.primary, fontWeight: '600', fontSize: 15 },
+  closeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary,
+    borderWidth: 0,
+  },
+  closeButtonText: { color: '#0D0D0F', fontWeight: '600', fontSize: 14 },
   badgeClosed: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
@@ -391,10 +400,12 @@ const styles = StyleSheet.create({
   },
   badgeClosedText: { color: '#0D0D0F', fontSize: 12, fontWeight: '600' },
   deleteButton: {
-    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.danger,
     backgroundColor: 'rgba(246,70,93,0.12)',
