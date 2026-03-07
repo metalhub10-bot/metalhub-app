@@ -9,6 +9,7 @@ import { loginUser, setSessionId, assertSuccess } from '@/services/api';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -52,15 +53,30 @@ export default function LoginScreen() {
           keyboardType="email-address"
           editable={!loading}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          placeholderTextColor={colors.textMuted}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          editable={!loading}
-        />
+        <View style={styles.passwordRow}>
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={[styles.input, styles.passwordInput, styles.passwordInputNoBorder]}
+              placeholder="Contraseña"
+              placeholderTextColor={colors.textMuted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity
+              style={styles.passwordToggle}
+              onPress={() => setShowPassword((prev) => !prev)}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={20}
+                color={colors.textSecondary}
+                style={{ lineHeight: 20, textAlignVertical: 'center' }}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
         <TouchableOpacity style={styles.primaryBtn} activeOpacity={0.8} onPress={handleLogin} disabled={loading}>
           {loading ? (
             <ActivityIndicator color="#0D0D0F" />
@@ -87,6 +103,38 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: '700', color: colors.text, marginBottom: 8 },
   subtitle: { color: colors.textSecondary, marginBottom: spacing.xl },
   input: { backgroundColor: colors.input, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, color: colors.text, fontSize: 16, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border },
+  passwordRow: {
+    marginBottom: spacing.md,
+  },
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.input,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    height: 52,
+    overflow: 'hidden',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+    height: 52,
+    textAlignVertical: 'center',
+    marginBottom: 0,
+  },
+  passwordInputNoBorder: {
+    borderWidth: 0,
+    borderRadius: 0,
+  },
+  passwordToggle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 52,
+    width: 44,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border,
+  },
   primaryBtn: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', marginTop: spacing.sm, minHeight: 52, justifyContent: 'center' },
   primaryBtnText: { color: '#0D0D0F', fontSize: 16, fontWeight: '700' },
   footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 'auto', paddingVertical: spacing.lg },

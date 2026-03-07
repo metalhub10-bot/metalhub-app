@@ -32,6 +32,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
@@ -122,7 +123,27 @@ export default function RegisterScreen() {
           <Text style={styles.subtitle}>Únete a MetalHub</Text>
           <TextInput style={styles.input} placeholder="Nombre completo" placeholderTextColor={colors.textMuted} value={name} onChangeText={setName} editable={!loading} />
           <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.textMuted} value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" editable={!loading} />
-          <TextInput style={styles.input} placeholder="Contraseña" placeholderTextColor={colors.textMuted} value={password} onChangeText={setPassword} secureTextEntry editable={!loading} />
+          <View style={styles.passwordRow}>
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                style={[styles.input, styles.passwordInput, styles.passwordInputNoBorder]}
+                placeholder="Contraseña"
+                placeholderTextColor={colors.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                editable={!loading}
+              />
+              <TouchableOpacity style={styles.passwordToggle} onPress={() => setShowPassword((prev) => !prev)}>
+                <Ionicons
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={colors.textSecondary}
+                  style={{ lineHeight: 20, textAlignVertical: 'center' }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
           <View style={styles.phoneRow}>
             <TouchableOpacity
               style={styles.countryCodeBtn}
@@ -195,6 +216,38 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: spacing.lg, paddingTop: spacing.lg },
   iconWrap: { alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.lg },
+  passwordRow: {
+    marginBottom: spacing.md,
+  },
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.input,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    height: 52,
+    overflow: 'hidden',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: spacing.md,
+    height: 52,
+    textAlignVertical: 'center',
+    marginBottom: 0,
+  },
+  passwordInputNoBorder: {
+    borderWidth: 0,
+    borderRadius: 0,
+  },
+  passwordToggle: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 52,
+    width: 44,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border,
+  },
   avatarPlaceholder: {
     width: 120,
     height: 120,
