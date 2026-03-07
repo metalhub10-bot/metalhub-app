@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import Constants from 'expo-constants';
 import { colors, spacing, borderRadius } from '@/config/theme';
 import { getMe, logoutUser, clearSession } from '@/services/api';
+
+const appVersion = Constants.expoConfig?.version ?? '1.0.0';
+const appVersionDisplay = Platform.OS === 'android'
+  ? `v${appVersion} (${Constants.expoConfig?.android?.versionCode ?? 1})`
+  : `v${appVersion}`;
 
 type ProfileUser = {
   id: string;
@@ -26,22 +33,31 @@ export default function PerfilScreen() {
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const meRes = await getMe();
-        if (meRes.success && meRes.user) {
-          setUser(meRes.user as ProfileUser);
-        } else if ((meRes as { success?: boolean }).success === false && ((meRes as { message?: string }).message?.includes('Sesión') || (meRes as { message?: string }).message?.includes('inválida'))) {
-          setUser(null);
-        }
-      } catch {
+  const loadProfile = React.useCallback(async () => {
+    try {
+      const meRes = await getMe();
+      if (meRes.success && meRes.user) {
+        setUser(meRes.user as ProfileUser);
+      } else if ((meRes as { success?: boolean }).success === false && ((meRes as { message?: string }).message?.includes('Sesión') || (meRes as { message?: string }).message?.includes('inválida'))) {
         setUser(null);
-      } finally {
-        setLoading(false);
       }
-    })();
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  // Refrescar perfil al volver a la pestaña (p. ej. tras editar y guardar avatar)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user !== null) loadProfile();
+    }, [loadProfile, user])
+  );
 
   const handleLogout = () => {
     Alert.alert('Cerrar sesión', '¿Seguro que quieres salir?', [
@@ -86,6 +102,7 @@ export default function PerfilScreen() {
               <Text style={styles.loginBtnText}>Iniciar sesión</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.versionText}>{appVersionDisplay}</Text>
         </ScrollView>
       </SafeAreaView>
     );
@@ -164,6 +181,7 @@ export default function PerfilScreen() {
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} disabled={loggingOut}>
           {loggingOut ? <ActivityIndicator size="small" color={colors.danger} /> : <Text style={styles.logoutText}>Cerrar sesión</Text>}
         </TouchableOpacity>
+        <Text style={styles.versionText}>{appVersionDisplay}</Text>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -204,4 +222,5 @@ const styles = StyleSheet.create({
   menuItemBadge: { color: colors.success, fontSize: 12, fontWeight: '600' },
   logoutBtn: { marginTop: spacing.lg, paddingVertical: spacing.md, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
   logoutText: { color: colors.danger, fontSize: 15, fontWeight: '600' },
+  versionText: { marginTop: spacing.lg, textAlign: 'center', color: colors.textMuted, fontSize: 12 },
 });

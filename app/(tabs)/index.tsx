@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -53,9 +53,12 @@ function mapPublicacionToCard(p: PublicacionItem): ListingCardProps {
   };
 }
 
+const SEARCH_DEBOUNCE_MS = 400;
+
 export default function MercadoScreen() {
   const [filter, setFilter] = useState<FilterTab>('todos');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [filtersModalVisible, setFiltersModalVisible] = useState(false);
   const [sortId, setSortId] = useState('recent');
@@ -68,9 +71,12 @@ export default function MercadoScreen() {
   const [metalCategoryFilter, setMetalCategoryFilter] = useState<string | null>(null);
   const [metalSubtypeFilter, setMetalSubtypeFilter] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState('');
+  const [metalOtherFilter, setMetalOtherFilter] = useState('');
   const [tempMetalCategoryFilter, setTempMetalCategoryFilter] = useState<string | null>(null);
   const [tempMetalSubtypeFilter, setTempMetalSubtypeFilter] = useState<string | null>(null);
+  const [tempMetalOtherText, setTempMetalOtherText] = useState('');
   const [tempLocationFilter, setTempLocationFilter] = useState('');
+  const hasLoadedOnce = useRef(false);
 
   const ordenMap: Record<string, 'reciente' | 'precio_asc' | 'precio_desc' | 'volumen'> = {
     recent: 'reciente',
@@ -80,14 +86,22 @@ export default function MercadoScreen() {
     reputation: 'reciente',
   };
 
+  // Debounce búsqueda: solo actualizar después de que el usuario deje de escribir
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const fetchListings = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+    else if (!hasLoadedOnce.current) setLoading(true);
     try {
       const tipo = filter === 'todos' ? undefined : filter;
 
       let metalQuery: string | undefined;
-      if (metalCategoryFilter) {
+      if (metalCategoryFilter === 'otro') {
+        metalQuery = metalOtherFilter.trim() || undefined;
+      } else if (metalCategoryFilter) {
         const group = METAL_GROUPS.find((g) => g.id === metalCategoryFilter);
         if (group) {
           if (group.variants && group.variants.length > 0 && metalSubtypeFilter) {
@@ -100,12 +114,13 @@ export default function MercadoScreen() {
       const res = await getPublicaciones({
         tipo,
         orden: ordenMap[sortId] ?? 'reciente',
-        busqueda: search.trim() || undefined,
+        busqueda: debouncedSearch.trim() || undefined,
         metal: metalQuery,
         ubicacion: locationFilter.trim() || undefined,
         limite: 50,
       });
       if (res.success && Array.isArray(res.data)) {
+        hasLoadedOnce.current = true;
         setListings(res.data);
         setTotal(res.total ?? res.data.length);
       } else {
@@ -120,10 +135,10 @@ export default function MercadoScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filter, sortId, search, metalCategoryFilter, metalSubtypeFilter, locationFilter]);
+  }, [filter, sortId, debouncedSearch, metalCategoryFilter, metalSubtypeFilter, metalOtherFilter, locationFilter]);
 
-  // Cargar al montar (primera vez)
-  React.useEffect(() => {
+  // Cargar al montar y cuando cambian filtros/búsqueda (debounced)
+  useEffect(() => {
     fetchListings();
   }, [fetchListings]);
 
@@ -212,6 +227,7 @@ export default function MercadoScreen() {
               onPress={() => {
                 setTempMetalCategoryFilter(metalCategoryFilter);
                 setTempMetalSubtypeFilter(metalSubtypeFilter);
+                setTempMetalOtherText(metalOtherFilter);
                 setTempLocationFilter(locationFilter);
                 setFiltersModalVisible(true);
               }}
@@ -316,7 +332,20 @@ export default function MercadoScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+            {tempMetalCategoryFilter === 'otro' ? (
+              <>
+                <Text style={styles.filtersLabel}>¿Qué material buscas?</Text>
+                <TextInput
+                  style={styles.filtersInput}
+                  placeholder="Ej: Titanio, Wolframio..."
+                  placeholderTextColor={colors.textMuted}
+                  value={tempMetalOtherText}
+                  onChangeText={setTempMetalOtherText}
+                />
+              </>
+            ) : null}
             {tempMetalCategoryFilter &&
+              tempMetalCategoryFilter !== 'otro' &&
               METAL_GROUPS.find((g) => g.id === tempMetalCategoryFilter)?.variants && (
                 <>
                   <Text style={styles.filtersLabel}>Subtipo</Text>
@@ -364,9 +393,11 @@ export default function MercadoScreen() {
                 onPress={() => {
                   setTempMetalCategoryFilter(null);
                   setTempMetalSubtypeFilter(null);
+                  setTempMetalOtherText('');
                   setTempLocationFilter('');
                   setMetalCategoryFilter(null);
                   setMetalSubtypeFilter(null);
+                  setMetalOtherFilter('');
                   setLocationFilter('');
                   setFiltersModalVisible(false);
                   fetchListings(true);
@@ -379,6 +410,7 @@ export default function MercadoScreen() {
                 onPress={() => {
                   setMetalCategoryFilter(tempMetalCategoryFilter);
                   setMetalSubtypeFilter(tempMetalSubtypeFilter);
+                  setMetalOtherFilter(tempMetalCategoryFilter === 'otro' ? tempMetalOtherText : '');
                   setLocationFilter(tempLocationFilter);
                   setFiltersModalVisible(false);
                   fetchListings(true);
@@ -428,46 +460,46 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.textSecondary },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
   },
   headerLeft: { flex: 1 },
-  logo: { fontSize: 24, fontWeight: '700', color: colors.primary, marginBottom: spacing.sm },
-  headerBadges: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  logo: { fontSize: 20, fontWeight: '700', color: colors.primary, marginBottom: spacing.xs },
+  headerBadges: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
   badgePillGreen: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: 'rgba(14,203,129,0.15)',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 2,
     borderRadius: 20,
   },
   badgeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.success },
-  badgeGreenText: { color: colors.success, fontSize: 12, fontWeight: '500' },
+  badgeGreenText: { color: colors.success, fontSize: 11, fontWeight: '500' },
   badgePillYellow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: 'rgba(240,185,11,0.15)',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    paddingVertical: 2,
     borderRadius: 20,
   },
-  badgeYellowText: { color: colors.primary, fontSize: 12, fontWeight: '500' },
+  badgeYellowText: { color: colors.primary, fontSize: 11, fontWeight: '500' },
   headerIcons: { flexDirection: 'row', gap: 4 },
   iconBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center' },
-  filtersSection: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: spacing.xs },
+  filtersSection: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs },
   sortSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    paddingBottom: spacing.lg,
+    paddingVertical: spacing.xs,
+    paddingBottom: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     marginHorizontal: spacing.md,

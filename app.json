@@ -17,6 +17,7 @@
     },
     "android": {
       "package": "com.metalhub.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0D0D0F",
         "foregroundImage": "./assets/images/icon.png",
@@ -33,10 +34,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "352a192b-8402-49d2-aec3-33012db7fd84"
+        "projectId": "f78d85c2-6c28-42a8-83e7-0fea8d838843"
       }
-    },
-    "owner": "metalhub"
+    }
   },
   "web": {
     "bundler": "metro",

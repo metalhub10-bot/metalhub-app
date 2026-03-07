@@ -29,6 +29,7 @@ export const METAL_GROUPS = [
   { id: 'hierro', label: 'Hierro', variants: ['Chatarra', 'Pesado', 'Chico'] },
   { id: 'carton', label: 'Cartón', variants: ['Blanco', 'Afiche', 'Conos', 'Diarios'] },
   { id: 'plastico', label: 'Plástico' },
+  { id: 'otro', label: 'Otro' },
 ] as const;
 
 export const SORT_OPTIONS = [

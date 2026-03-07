@@ -19,6 +19,7 @@ export default function PublicarScreen() {
   const [operation, setOperation] = useState<OperationType>('vendo');
   const [metalCategory, setMetalCategory] = useState<string | null>(null);
   const [metalSubtype, setMetalSubtype] = useState<string | null>(null);
+  const [metalOtherText, setMetalOtherText] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState<'kg' | 'tn'>('kg');
   const [price, setPrice] = useState('');
@@ -41,19 +42,33 @@ export default function PublicarScreen() {
   }, []);
 
   const handlePublish = async () => {
-    const selectedGroup = METAL_GROUPS.find((g) => g.id === metalCategory);
-    if (!selectedGroup) {
+    if (!metalCategory) {
       Alert.alert('Error', 'Elige un tipo de material');
       return;
     }
-    if (selectedGroup.variants && selectedGroup.variants.length > 0 && !metalSubtype) {
-      Alert.alert('Error', 'Elige una subcategoría dentro del material');
-      return;
+    let metalLabel: string;
+    if (metalCategory === 'otro') {
+      const custom = metalOtherText.trim();
+      if (!custom) {
+        Alert.alert('Error', 'Escribe qué material estás publicando');
+        return;
+      }
+      metalLabel = custom;
+    } else {
+      const selectedGroup = METAL_GROUPS.find((g) => g.id === metalCategory);
+      if (!selectedGroup) {
+        Alert.alert('Error', 'Elige un tipo de material');
+        return;
+      }
+      if (selectedGroup.variants && selectedGroup.variants.length > 0 && !metalSubtype) {
+        Alert.alert('Error', 'Elige una subcategoría dentro del material');
+        return;
+      }
+      metalLabel =
+        selectedGroup.variants && selectedGroup.variants.length > 0 && metalSubtype
+          ? `${selectedGroup.label} - ${metalSubtype}`
+          : selectedGroup.label;
     }
-    const metalLabel =
-      selectedGroup.variants && selectedGroup.variants.length > 0 && metalSubtype
-        ? `${selectedGroup.label} - ${metalSubtype}`
-        : selectedGroup.label;
     const qty = parseFloat(quantity.replace(',', '.'));
     if (isNaN(qty) || qty <= 0) {
       Alert.alert('Error', 'Ingresa una cantidad válida');
@@ -97,6 +112,7 @@ export default function PublicarScreen() {
       ]);
       setMetalCategory(null);
       setMetalSubtype(null);
+      setMetalOtherText('');
       setQuantity('');
       setPrice('');
       setDescription('');
@@ -155,7 +171,21 @@ export default function PublicarScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+            {metalCategory === 'otro' ? (
+              <>
+                <Text style={styles.sectionLabel}>¿QUÉ MATERIAL?</Text>
+                <TextInput
+                  style={styles.inputFull}
+                  placeholder="Ej: Titanio, Wolframio, Aleación..."
+                  placeholderTextColor={colors.textMuted}
+                  value={metalOtherText}
+                  onChangeText={setMetalOtherText}
+                  editable={!submitting}
+                />
+              </>
+            ) : null}
             {metalCategory &&
+              metalCategory !== 'otro' &&
               METAL_GROUPS.find((g) => g.id === metalCategory)?.variants && (
                 <>
                   <Text style={styles.sectionLabel}>SUBTIPO</Text>
