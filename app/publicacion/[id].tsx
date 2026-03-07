@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,12 +9,18 @@ import {
   Alert,
   ActivityIndicator,
   Image,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius } from '@/config/theme';
-import { getPublicacionById, formatTimeAgo, updatePublicacion, deletePublicacion, assertSuccess } from '@/services/api';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, spacing, borderRadius } from "@/config/theme";
+import {
+  getPublicacionById,
+  formatTimeAgo,
+  updatePublicacion,
+  deletePublicacion,
+  assertSuccess,
+} from "@/services/api";
 
 export default function PublicacionDetalleScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -30,7 +36,15 @@ export default function PublicacionDetalleScreen() {
     descripcion?: string;
     entrega?: string;
     ubicacion?: string;
-    usuario?: { id?: string; nombre: string; rating?: number; ubicacion?: string; verificado?: boolean; whatsapp?: string; avatarUrl?: string };
+    usuario?: {
+      id?: string;
+      nombre: string;
+      rating?: number;
+      ubicacion?: string;
+      verificado?: boolean;
+      whatsapp?: string;
+      avatarUrl?: string;
+    };
     urgente?: boolean;
     cerrada?: boolean;
     creadoEn: string;
@@ -41,7 +55,7 @@ export default function PublicacionDetalleScreen() {
 
   useEffect(() => {
     if (!id) {
-      setError('ID no válido');
+      setError("ID no válido");
       setLoading(false);
       return;
     }
@@ -50,39 +64,48 @@ export default function PublicacionDetalleScreen() {
       try {
         const res = await getPublicacionById(id);
         if (!res.success || !res.data) {
-          setError(res.message ?? res.error ?? 'Publicación no encontrada');
+          setError(res.message ?? res.error ?? "Publicación no encontrada");
           return;
         }
         if (!cancelled) {
           setData(res.data as typeof data);
-          const esPropia = (res as unknown as { esPropia?: boolean }).esPropia ?? false;
+          const esPropia =
+            (res as unknown as { esPropia?: boolean }).esPropia ?? false;
           setIsOwner(!!esPropia);
         }
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Error al cargar');
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Error al cargar");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  const type = data?.tipo === 'compro' ? 'COMPRA' : 'VENTA';
-  const quantity = data ? `${Number(data.cantidad).toLocaleString('es-AR')} ${data.unidad}` : '';
+  const type = data?.tipo === "compro" ? "COMPRA" : "VENTA";
+  const quantity = data
+    ? `${Number(data.cantidad).toLocaleString("es-AR")} ${data.unidad}`
+    : "";
   const price = data
     ? data.precioAConvenir
-      ? '$ A convenir'
-      : `$${Number(data.precio ?? 0).toLocaleString('es-AR')} /${data.unidad === 'tn' ? 'tn' : 'kg'}`
-    : '';
+      ? "$ A convenir"
+      : `$${Number(data.precio ?? 0).toLocaleString("es-AR")} /${data.unidad === "tn" ? "tn" : "kg"}`
+    : "";
   const isVerified = data?.usuario?.verificado ?? false;
   const isUrgent = data?.urgente ?? false;
-  const timeAgo = data?.creadoEn ? formatTimeAgo(data.creadoEn) : '';
+  const timeAgo = data?.creadoEn ? formatTimeAgo(data.creadoEn) : "";
 
   const handleContact = () => {
     if (data?.cerrada || isOwner) return;
-    const phone = (data?.usuario?.whatsapp || '5491112345678').replace(/\D/g, '');
+    const phone = (data?.usuario?.whatsapp || "5491112345678").replace(
+      /\D/g,
+      "",
+    );
     const text = encodeURIComponent(
-      `Hola, me interesa tu publicación: ${data?.metal ?? ''} · ${quantity} - ${price}`
+      `Hola, me interesa tu publicación: ${data?.metal ?? ""} · ${quantity} - ${price}`,
     );
     Linking.openURL(`https://wa.me/${phone}?text=${text}`);
   };
@@ -95,8 +118,9 @@ export default function PublicacionDetalleScreen() {
       assertSuccess(res);
       setData({ ...data, cerrada: true });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'No se pudo cerrar la publicación';
-      Alert.alert('Error', msg);
+      const msg =
+        err instanceof Error ? err.message : "No se pudo cerrar la publicación";
+      Alert.alert("Error", msg);
     } finally {
       setUpdatingStatus(false);
     }
@@ -105,21 +129,24 @@ export default function PublicacionDetalleScreen() {
   const handleDelete = () => {
     if (!id || !data || !isOwner) return;
     Alert.alert(
-      'Eliminar publicación',
-      'Esta acción no se puede deshacer. ¿Quieres eliminar esta publicación?',
+      "Eliminar publicación",
+      "Esta acción no se puede deshacer. ¿Quieres eliminar esta publicación?",
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: "Cancelar", style: "cancel" },
         {
-          text: 'Eliminar',
-          style: 'destructive',
+          text: "Eliminar",
+          style: "destructive",
           onPress: async () => {
             setDeleting(true);
             try {
               await deletePublicacion(String(id));
               router.back();
             } catch (err) {
-              const msg = err instanceof Error ? err.message : 'No se pudo eliminar la publicación';
-              Alert.alert('Error', msg);
+              const msg =
+                err instanceof Error
+                  ? err.message
+                  : "No se pudo eliminar la publicación";
+              Alert.alert("Error", msg);
             } finally {
               setDeleting(false);
             }
@@ -131,7 +158,7 @@ export default function PublicacionDetalleScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.loadingWrap}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Cargando...</Text>
@@ -142,17 +169,24 @@ export default function PublicacionDetalleScreen() {
 
   if (error || !data) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
+          >
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Detalle</Text>
           <View style={styles.headerPlaceholder} />
         </View>
         <View style={styles.loadingWrap}>
-          <Text style={styles.errorText}>{error ?? 'No encontrado'}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => router.back()}>
+          <Text style={styles.errorText}>{error ?? "No encontrado"}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={() => router.back()}
+          >
             <Text style={styles.retryBtnText}>Volver</Text>
           </TouchableOpacity>
         </View>
@@ -161,9 +195,13 @@ export default function PublicacionDetalleScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          activeOpacity={0.8}
+        >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalle de publicación</Text>
@@ -176,7 +214,12 @@ export default function PublicacionDetalleScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.badgesRow}>
-          <View style={[styles.badge, type === 'COMPRA' ? styles.badgeCompra : styles.badgeVenta]}>
+          <View
+            style={[
+              styles.badge,
+              type === "COMPRA" ? styles.badgeCompra : styles.badgeVenta,
+            ]}
+          >
             <Text style={styles.badgeText}>{type}</Text>
           </View>
           {isUrgent && (
@@ -193,7 +236,9 @@ export default function PublicacionDetalleScreen() {
           {timeAgo ? <Text style={styles.timeAgo}>{timeAgo}</Text> : null}
         </View>
 
-        <Text style={styles.metalQuantity}>{data.metal} · {quantity}</Text>
+        <Text style={styles.metalQuantity}>
+          {data.metal} · {quantity}
+        </Text>
         <Text style={styles.price}>{price}</Text>
 
         {data.descripcion ? (
@@ -207,20 +252,39 @@ export default function PublicacionDetalleScreen() {
           <Text style={styles.sectionLabel}>Publicado por</Text>
           <View style={styles.userRow}>
             {data.usuario?.avatarUrl ? (
-              <Image source={{ uri: data.usuario.avatarUrl }} style={styles.avatar} />
+              <Image
+                source={{ uri: data.usuario.avatarUrl }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatar} />
             )}
             <View style={styles.userInfo}>
               <View style={styles.nameRow}>
-                <Text style={styles.userName}>{data.usuario?.nombre ?? 'Usuario'}</Text>
-                {isVerified && <Ionicons name="checkmark-circle" size={18} color={colors.info} />}
+                <Text style={styles.userName}>
+                  {data.usuario?.nombre ?? "Usuario"}
+                </Text>
+                {isVerified && (
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={18}
+                    color={colors.info}
+                  />
+                )}
               </View>
               <View style={styles.metaRow}>
                 <Ionicons name="star" size={14} color={colors.primary} />
-                <Text style={styles.metaText}>{String(data.usuario?.rating ?? 0)}</Text>
-                <Ionicons name="location" size={14} color={colors.textSecondary} />
-                <Text style={styles.metaText}>{data.usuario?.ubicacion ?? data.ubicacion ?? '—'}</Text>
+                <Text style={styles.metaText}>
+                  {String(data.usuario?.rating ?? 0)}
+                </Text>
+                <Ionicons
+                  name="location"
+                  size={14}
+                  color={colors.textSecondary}
+                />
+                <Text style={styles.metaText}>
+                  {data.usuario?.ubicacion ?? data.ubicacion ?? "—"}
+                </Text>
               </View>
             </View>
           </View>
@@ -239,7 +303,7 @@ export default function PublicacionDetalleScreen() {
             <Ionicons
               name="chatbubble"
               size={20}
-              color={data.cerrada ? colors.textSecondary : '#fff'}
+              color={data.cerrada ? colors.textSecondary : "#fff"}
             />
             <Text
               style={[
@@ -247,7 +311,7 @@ export default function PublicacionDetalleScreen() {
                 data.cerrada && styles.contactButtonTextDisabled,
               ]}
             >
-              {data.cerrada ? 'Operación cerrada' : 'Contactar por WhatsApp'}
+              {data.cerrada ? "Operación cerrada" : "Contactar por WhatsApp"}
             </Text>
           </TouchableOpacity>
         )}
@@ -256,7 +320,12 @@ export default function PublicacionDetalleScreen() {
           <View style={styles.ownerActions}>
             <TouchableOpacity
               style={styles.editButton}
-              onPress={() => router.push({ pathname: '/editar-publicacion/[id]', params: { id: String(id) } })}
+              onPress={() =>
+                router.push({
+                  pathname: "/editar-publicacion/[id]",
+                  params: { id: String(id) },
+                })
+              }
               activeOpacity={0.8}
             >
               <Ionicons name="create" size={22} color={colors.primary} />
@@ -274,7 +343,9 @@ export default function PublicacionDetalleScreen() {
                 ) : (
                   <>
                     <Ionicons name="checkmark-done" size={22} color="#0D0D0F" />
-                    <Text style={styles.closeButtonText}>Marcar como completada</Text>
+                    <Text style={styles.closeButtonText}>
+                      Marcar como completada
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -290,7 +361,9 @@ export default function PublicacionDetalleScreen() {
               ) : (
                 <>
                   <Ionicons name="trash" size={22} color={colors.danger} />
-                  <Text style={styles.deleteButtonText}>Eliminar publicación</Text>
+                  <Text style={styles.deleteButtonText}>
+                    Eliminar publicación
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
@@ -306,63 +379,102 @@ export default function PublicacionDetalleScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   backBtn: { padding: 4 },
-  headerTitle: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  headerTitle: { color: colors.text, fontSize: 16, fontWeight: "600" },
   headerPlaceholder: { width: 32 },
   container: { flex: 1 },
   content: { padding: spacing.md },
-  loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
+  loadingWrap: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.md,
+  },
   loadingText: { color: colors.textSecondary },
-  errorText: { color: colors.danger, textAlign: 'center', marginBottom: spacing.md },
-  retryBtn: { paddingVertical: spacing.md, paddingHorizontal: spacing.lg, backgroundColor: colors.card, borderRadius: borderRadius.md },
-  retryBtnText: { color: colors.text, fontWeight: '600' },
-  badgesRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
-  badge: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.sm },
-  badgeCompra: { backgroundColor: colors.success },
-  badgeVenta: { backgroundColor: colors.danger },
-  badgeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  badgeUrgent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(240,185,11,0.2)',
+  errorText: {
+    color: colors.danger,
+    textAlign: "center",
+    marginBottom: spacing.md,
+  },
+  retryBtn: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.md,
+  },
+  retryBtnText: { color: colors.text, fontWeight: "600" },
+  badgesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  badge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.sm,
   },
-  badgeUrgentText: { color: colors.primary, fontSize: 12, fontWeight: '600' },
+  badgeCompra: { backgroundColor: colors.success },
+  badgeVenta: { backgroundColor: colors.danger },
+  badgeText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  badgeUrgent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(240,185,11,0.2)",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  badgeUrgentText: { color: colors.primary, fontSize: 12, fontWeight: "600" },
   timeAgo: { color: colors.textSecondary, fontSize: 13 },
-  metalQuantity: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 4 },
+  metalQuantity: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
   price: { color: colors.text, fontSize: 18, marginBottom: spacing.lg },
   section: { marginBottom: spacing.lg },
-  sectionLabel: { color: colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: spacing.sm },
+  sectionLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: spacing.sm,
+  },
   description: { color: colors.text, fontSize: 15, lineHeight: 22 },
-  userRow: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.borderLight, marginRight: spacing.md },
+  userRow: { flexDirection: "row", alignItems: "center" },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.borderLight,
+    marginRight: spacing.md,
+  },
   userInfo: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  userName: { color: colors.text, fontSize: 16, fontWeight: '600' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  userName: { color: colors.text, fontSize: 16, fontWeight: "600" },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
   metaText: { color: colors.textSecondary, fontSize: 14 },
   contactButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     backgroundColor: colors.success,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     marginTop: spacing.md,
   },
-  contactButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  contactButtonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   contactButtonDisabled: { backgroundColor: colors.card },
   contactButtonTextDisabled: { color: colors.textSecondary },
   ownerActions: {
@@ -370,45 +482,45 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.primary,
-    backgroundColor: 'rgba(240,185,11,0.12)',
+    backgroundColor: "rgba(240,185,11,0.12)",
   },
-  editButtonText: { color: colors.primary, fontWeight: '600', fontSize: 15 },
+  editButtonText: { color: colors.primary, fontWeight: "600", fontSize: 15 },
   closeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     backgroundColor: colors.primary,
     borderWidth: 0,
   },
-  closeButtonText: { color: '#0D0D0F', fontWeight: '600', fontSize: 14 },
+  closeButtonText: { color: "#0D0D0F", fontWeight: "600", fontSize: 14 },
   badgeClosed: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
     borderRadius: borderRadius.sm,
     backgroundColor: colors.primary,
   },
-  badgeClosedText: { color: '#0D0D0F', fontSize: 12, fontWeight: '600' },
+  badgeClosedText: { color: "#0D0D0F", fontSize: 12, fontWeight: "600" },
   deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.danger,
-    backgroundColor: 'rgba(246,70,93,0.12)',
+    backgroundColor: "rgba(246,70,93,0.12)",
   },
-  deleteButtonText: { color: colors.danger, fontWeight: '600', fontSize: 14 },
+  deleteButtonText: { color: colors.danger, fontWeight: "600", fontSize: 14 },
 });
