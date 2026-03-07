@@ -183,6 +183,10 @@ export type CreatePublicacionBody = {
   urgente?: boolean;
 };
 
+export type UpdatePublicacionBody = Partial<CreatePublicacionBody> & {
+  cerrada?: boolean;
+};
+
 export async function createPublicacion(body: CreatePublicacionBody): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
   const headers = await authHeaders();
   const res = await fetch(getApiUrl('/api/v1/publicaciones'), {
@@ -193,7 +197,7 @@ export async function createPublicacion(body: CreatePublicacionBody): Promise<Ap
   return res.json();
 }
 
-export async function updatePublicacion(id: string, body: Partial<CreatePublicacionBody>): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
+export async function updatePublicacion(id: string, body: UpdatePublicacionBody): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
   const headers = await authHeaders();
   const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), {
     method: 'PUT',

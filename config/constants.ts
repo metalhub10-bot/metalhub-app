@@ -11,7 +11,13 @@ export const METALS = [
   'Otro',
 ] as const;
 
-export const METAL_GROUPS = [
+export type MetalGroup = {
+  id: string;
+  label: string;
+  variants?: readonly string[];
+};
+
+export const METAL_GROUPS: readonly MetalGroup[] = [
   { id: 'cobre', label: 'Cobre', variants: ['1ra', '2da'] },
   { id: 'bronce', label: 'Bronce', variants: ['Colorado', 'Latón', 'Trafilado', 'Común'] },
   { id: 'aluminios', label: 'Aluminios', variants: ['Blando', 'Llantas', 'Duro', 'Latitas', 'Perfil'] },
@@ -30,7 +36,7 @@ export const METAL_GROUPS = [
   { id: 'carton', label: 'Cartón', variants: ['Blanco', 'Afiche', 'Conos', 'Diarios'] },
   { id: 'plastico', label: 'Plástico' },
   { id: 'otro', label: 'Otro' },
-] as const;
+];
 
 export const SORT_OPTIONS = [
   { id: 'recent', label: 'Más reciente' },

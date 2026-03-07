@@ -351,7 +351,7 @@ export default function MercadoScreen() {
                   <Text style={styles.filtersLabel}>Subtipo</Text>
                   <View style={styles.filtersMetalGrid}>
                     {METAL_GROUPS.find((g) => g.id === tempMetalCategoryFilter)!.variants!.map(
-                      (variant) => (
+                      (variant: string) => (
                         <TouchableOpacity
                           key={variant}
                           style={[

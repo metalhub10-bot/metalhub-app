@@ -1,13 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '@/config/theme';
 import { DELIVERY_OPTIONS, METAL_GROUPS } from '@/config/constants';
-import { getMetales, createPublicacion, getSessionId, assertSuccess } from '@/services/api';
+import { getPublicacionById, getSessionId, updatePublicacion, createPublicacion, assertSuccess } from '@/services/api';
 
 type OperationType = 'vendo' | 'compro';
+
+type PublicacionData = {
+  tipo: OperationType;
+  metal: string;
+  cantidad: number;
+  unidad: 'kg' | 'tn';
+  precio?: number;
+  precioAConvenir: boolean;
+  descripcion?: string;
+  entrega?: string;
+  ubicacion?: string;
+  urgente?: boolean;
+  cerrada?: boolean;
+};
 
 const DELIVERY_MAP: Record<string, string> = {
   pickup_now: 'Retiro inmediato',
@@ -15,7 +29,12 @@ const DELIVERY_MAP: Record<string, string> = {
   shipping: 'Envío disponible',
 };
 
-export default function PublicarScreen() {
+const DELIVERY_REVERSE_MAP = Object.fromEntries(
+  Object.entries(DELIVERY_MAP).map(([k, v]) => [v, k]),
+);
+
+export default function EditarPublicacionScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [operation, setOperation] = useState<OperationType>('vendo');
   const [metalCategory, setMetalCategory] = useState<string | null>(null);
   const [metalSubtype, setMetalSubtype] = useState<string | null>(null);
@@ -27,25 +46,78 @@ export default function PublicarScreen() {
   const [delivery, setDelivery] = useState<string | null>(null);
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
-  const [metales, setMetales] = useState<{ id: string; nombre: string }[]>([]);
-  const [loadingMetales, setLoadingMetales] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    // En esta versión usamos catálogo local para metales y variantes
-    const localMetales = METAL_GROUPS.map((g, index) => ({
-      id: g.id ?? String(index + 1),
-      nombre: g.label,
-    }));
-    setMetales(localMetales);
-    setLoadingMetales(false);
-  }, []);
+    if (!id) {
+      Alert.alert('Error', 'ID de publicación inválido', [{ text: 'Volver', onPress: () => router.back() }]);
+      return;
+    }
 
-  const handlePublish = async () => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getPublicacionById(id);
+        if (!res.success || !res.data) {
+          Alert.alert('Error', res.message ?? res.error ?? 'No se encontró la publicación', [
+            { text: 'Volver', onPress: () => router.back() },
+          ]);
+          return;
+        }
+
+        if (cancelled) return;
+
+        const pub = res.data as PublicacionData;
+        setOperation(pub.tipo);
+        setQuantity(String(pub.cantidad ?? ''));
+        setUnit(pub.unidad ?? 'kg');
+        setPrice(pub.precioAConvenir ? '' : String(pub.precio ?? ''));
+        setPriceNegotiable(!!pub.precioAConvenir);
+        setDescription(pub.descripcion ?? '');
+        setLocation(pub.ubicacion ?? '');
+        setDelivery(pub.entrega ? DELIVERY_REVERSE_MAP[pub.entrega] ?? null : null);
+
+        // Determine metal selection (group + subtype / other)
+        const foundGroup = METAL_GROUPS.find((g) => pub.metal === g.label);
+        if (foundGroup) {
+          setMetalCategory(foundGroup.id ?? null);
+          setMetalSubtype(null);
+        } else {
+          const [groupLabel, subtype] = pub.metal.split(' - ').map((s) => s.trim());
+          const group = METAL_GROUPS.find((g) => g.label === groupLabel);
+          if (group) {
+            setMetalCategory(group.id ?? null);
+            if (group.variants?.includes(subtype)) {
+              setMetalSubtype(subtype);
+            } else {
+              setMetalSubtype(null);
+            }
+          } else {
+            setMetalCategory('otro');
+            setMetalOtherText(pub.metal);
+          }
+        }
+      } catch (err) {
+        Alert.alert('Error', err instanceof Error ? err.message : 'Error al cargar publicación', [
+          { text: 'Volver', onPress: () => router.back() },
+        ]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const handleSave = async () => {
     if (!metalCategory) {
       Alert.alert('Error', 'Elige un tipo de material');
       return;
     }
+
     let metalLabel: string;
     if (metalCategory === 'otro') {
       const custom = metalOtherText.trim();
@@ -69,6 +141,7 @@ export default function PublicarScreen() {
           ? `${selectedGroup.label} - ${metalSubtype}`
           : selectedGroup.label;
     }
+
     const qty = parseFloat(quantity.replace(',', '.'));
     if (isNaN(qty) || qty <= 0) {
       Alert.alert('Error', 'Ingresa una cantidad válida');
@@ -81,7 +154,7 @@ export default function PublicarScreen() {
 
     const sessionId = await getSessionId();
     if (!sessionId) {
-      Alert.alert('Sesión requerida', 'Inicia sesión para publicar.', [
+      Alert.alert('Sesión requerida', 'Inicia sesión para editar la publicación.', [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Entrar', onPress: () => router.push('/login') },
       ]);
@@ -91,7 +164,7 @@ export default function PublicarScreen() {
     setSubmitting(true);
     try {
       const precioNum = priceNegotiable ? undefined : parseFloat(price.replace(',', '.'));
-      const res = await createPublicacion({
+      const body = {
         tipo: operation,
         metal: metalLabel.trim(),
         cantidad: qty,
@@ -102,7 +175,17 @@ export default function PublicarScreen() {
         entrega: delivery ? DELIVERY_MAP[delivery] : undefined,
         ubicacion: location.trim() || undefined,
         urgente: false,
-      });
+      };
+      if (id) {
+        const res = await updatePublicacion(id, body);
+        assertSuccess(res);
+        Alert.alert('Actualizado', 'La publicación se actualizó correctamente.', [
+          { text: 'Ver publicación', onPress: () => router.replace(`/publicacion/${id}`) },
+        ]);
+        return;
+      }
+
+      const res = await createPublicacion(body);
       assertSuccess(res);
       Alert.alert('Publicado', 'Tu oferta se publicó correctamente.', [
         {
@@ -119,19 +202,30 @@ export default function PublicarScreen() {
       setLocation('');
       setDelivery(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo publicar';
+      const message = err instanceof Error ? err.message : 'No se pudo guardar la publicación';
       Alert.alert('Error', message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const list = metales.length > 0 ? metales : METAL_GROUPS.map((g, index) => ({ id: g.id ?? String(index + 1), nombre: g.label }));
+  const title = id ? 'Editar publicación' : 'Publicar';
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Cargando...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Publicar</Text>
+        <Text style={styles.title}>{title}</Text>
         <Text style={styles.sectionLabel}>TIPO DE OPERACIÓN</Text>
         <View style={styles.operationRow}>
           <TouchableOpacity style={[styles.operationBtn, operation === 'vendo' && styles.operationBtnActive]} onPress={() => setOperation('vendo')}>
@@ -142,85 +236,79 @@ export default function PublicarScreen() {
           </TouchableOpacity>
         </View>
         <Text style={styles.sectionLabel}>METAL</Text>
-        {loadingMetales ? (
-          <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: spacing.sm }} />
-        ) : (
+        <View style={styles.metalGrid}>
+          {METAL_GROUPS.map((group) => (
+            <TouchableOpacity
+              key={group.id}
+              style={[
+                styles.metalChip,
+                metalCategory === group.id && styles.metalChipActive,
+              ]}
+              onPress={() =>
+                setMetalCategory((current) =>
+                  current === group.id ? null : group.id
+                )
+              }
+            >
+              <Text
+                style={[
+                  styles.metalChipText,
+                  metalCategory === group.id && styles.metalChipTextActive,
+                ]}
+              >
+                {group.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {metalCategory === 'otro' ? (
           <>
-            <View style={styles.metalGrid}>
-              {METAL_GROUPS.map((group) => (
-                <TouchableOpacity
-                  key={group.id}
-                  style={[
-                    styles.metalChip,
-                    metalCategory === group.id && styles.metalChipActive,
-                  ]}
-                  onPress={() =>
-                    setMetalCategory((current) =>
-                      current === group.id ? null : group.id
-                    )
-                  }
-                >
-                  <Text
-                    style={[
-                      styles.metalChipText,
-                      metalCategory === group.id && styles.metalChipTextActive,
-                    ]}
-                  >
-                    {group.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {metalCategory === 'otro' ? (
-              <>
-                <Text style={styles.sectionLabel}>¿QUÉ MATERIAL?</Text>
-                <TextInput
-                  style={styles.inputFull}
-                  placeholder="Ej: Titanio, Wolframio, Aleación..."
-                  placeholderTextColor={colors.textMuted}
-                  value={metalOtherText}
-                  onChangeText={setMetalOtherText}
-                  editable={!submitting}
-                />
-              </>
-            ) : null}
-            {metalCategory &&
-              metalCategory !== 'otro' &&
-              METAL_GROUPS.find((g) => g.id === metalCategory)?.variants && (
-                <>
-                  <Text style={styles.sectionLabel}>SUBTIPO</Text>
-                  <View style={styles.metalGrid}>
-                    {METAL_GROUPS.find((g) => g.id === metalCategory)!.variants!.map(
-                      (variant: string) => (
-                        <TouchableOpacity
-                          key={variant}
-                          style={[
-                            styles.metalChip,
-                            metalSubtype === variant && styles.metalChipActive,
-                          ]}
-                          onPress={() =>
-                            setMetalSubtype((current) =>
-                              current === variant ? null : variant
-                            )
-                          }
-                        >
-                          <Text
-                            style={[
-                              styles.metalChipText,
-                              metalSubtype === variant &&
-                                styles.metalChipTextActive,
-                            ]}
-                          >
-                            {variant}
-                          </Text>
-                        </TouchableOpacity>
-                      )
-                    )}
-                  </View>
-                </>
-              )}
+            <Text style={styles.sectionLabel}>¿QUÉ MATERIAL?</Text>
+            <TextInput
+              style={styles.inputFull}
+              placeholder="Ej: Titanio, Wolframio, Aleación..."
+              placeholderTextColor={colors.textMuted}
+              value={metalOtherText}
+              onChangeText={setMetalOtherText}
+              editable={!submitting}
+            />
           </>
-        )}
+        ) : null}
+        {metalCategory &&
+          metalCategory !== 'otro' &&
+          METAL_GROUPS.find((g) => g.id === metalCategory)?.variants && (
+            <>
+              <Text style={styles.sectionLabel}>SUBTIPO</Text>
+              <View style={styles.metalGrid}>
+                {METAL_GROUPS.find((g) => g.id === metalCategory)!.variants!.map(
+                  (variant: string) => (
+                    <TouchableOpacity
+                      key={variant}
+                      style={[
+                        styles.metalChip,
+                        metalSubtype === variant && styles.metalChipActive,
+                      ]}
+                      onPress={() =>
+                        setMetalSubtype((current) =>
+                          current === variant ? null : variant
+                        )
+                      }
+                    >
+                      <Text
+                        style={[
+                          styles.metalChipText,
+                          metalSubtype === variant &&
+                            styles.metalChipTextActive,
+                        ]}
+                      >
+                        {variant}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+                )}
+              </View>
+            </>
+          )}
         <Text style={styles.sectionLabel}>CANTIDAD</Text>
         <View style={styles.inputRow}>
           <TextInput style={styles.input} placeholder="Ej: 500" placeholderTextColor={colors.textMuted} value={quantity} onChangeText={setQuantity} keyboardType="numeric" editable={!submitting} />
@@ -251,8 +339,8 @@ export default function PublicarScreen() {
         ))}
         <Text style={styles.sectionLabel}>UBICACIÓN</Text>
         <TextInput style={styles.inputFull} placeholder="Ciudad, provincia" placeholderTextColor={colors.textMuted} value={location} onChangeText={setLocation} editable={!submitting} />
-        <TouchableOpacity style={styles.publishButton} activeOpacity={0.8} onPress={handlePublish} disabled={submitting}>
-          {submitting ? <ActivityIndicator color="#0D0D0F" /> : <Text style={styles.publishButtonText}>Publicar oferta</Text>}
+        <TouchableOpacity style={styles.publishButton} activeOpacity={0.8} onPress={handleSave} disabled={submitting}>
+          {submitting ? <ActivityIndicator color="#0D0D0F" /> : <Text style={styles.publishButtonText}>{id ? 'Guardar cambios' : 'Publicar oferta'}</Text>}
         </TouchableOpacity>
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -295,4 +383,6 @@ const styles = StyleSheet.create({
   deliveryTextActive: { color: colors.primary, fontWeight: '600' },
   publishButton: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', marginTop: spacing.xl, minHeight: 52, justifyContent: 'center' },
   publishButtonText: { color: '#0D0D0F', fontSize: 16, fontWeight: '700' },
+  loadingWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
+  loadingText: { color: colors.textSecondary },
 });

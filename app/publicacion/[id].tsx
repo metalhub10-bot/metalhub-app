@@ -254,6 +254,13 @@ export default function PublicacionDetalleScreen() {
 
         {isOwner && (
           <View style={styles.ownerActionsRow}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => router.push({ pathname: '/publicar/[id]', params: { id } })}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.editButtonText}>Editar</Text>
+            </TouchableOpacity>
             {!data.cerrada && (
               <TouchableOpacity
                 style={styles.closeButton}
@@ -366,6 +373,16 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   closeButtonText: { color: '#0D0D0F', fontWeight: '600', fontSize: 14 },
+  editButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(240,185,11,0.12)',
+  },
+  editButtonText: { color: colors.primary, fontWeight: '600', fontSize: 14 },
   badgeClosed: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
