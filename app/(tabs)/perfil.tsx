@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -230,6 +231,23 @@ export default function PerfilScreen() {
             size={20}
             color={colors.textSecondary}
           />
+        </TouchableOpacity>
+        <Text style={styles.sectionLabel}>SOPORTE</Text>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => Linking.openURL('https://wa.me/541162656978')}
+        >
+          <Ionicons name="logo-whatsapp" size={22} color={colors.success} />
+          <Text style={styles.menuItemText}>Hablar con soporte</Text>
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.menuItem}
+          onPress={() => Linking.openURL('mailto:soportemetalhub@gmail.com')}
+        >
+          <Ionicons name="mail-outline" size={22} color={colors.text} />
+          <Text style={styles.menuItemText}>soportemetalhub@gmail.com</Text>
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.logoutBtn}

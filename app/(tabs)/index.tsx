@@ -177,7 +177,7 @@ export default function MercadoScreen() {
     if (!contactListing) return;
     const phone = (contactListing.whatsappNumber || '5491112345678').replace(/\D/g, '');
     const text = encodeURIComponent(
-      `Hola, me interesa tu publicación: ${contactListing.metal} · ${contactListing.quantity} - ${contactListing.price}`
+      `Hola, te hablo desde MetalHub. Me interesa tu publicación: ${contactListing.metal} · ${contactListing.quantity} · ${contactListing.price}`
     );
     Linking.openURL(`https://wa.me/${phone}?text=${text}`);
     setContactModalVisible(false);

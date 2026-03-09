@@ -56,7 +56,7 @@ export function ListingCard({
     }
     const phone = whatsappNumber || "5491112345678";
     const text = encodeURIComponent(
-      `Hola, me interesa tu publicación: ${metal} · ${quantity} - ${price}`,
+      `Hola, te hablo desde MetalHub. Me interesa tu publicación: ${metal} · ${quantity} · ${price}`,
     );
     Linking.openURL(`https://wa.me/${phone.replace(/\D/g, "")}?text=${text}`);
   };

@@ -105,14 +105,9 @@ export default function PublicacionDetalleScreen() {
       "",
     );
 
-    const messageLines = [
-      "Hola, te hablo desde MetalHub.",
-      "Me interesa tu publicación:",
-      `${data?.metal ?? ""} · ${quantity} · ${price}`,
-      "¿Podés darme más detalles?",
-    ];
-
-    const text = encodeURIComponent(messageLines.join(" "));
+    const text = encodeURIComponent(
+      `Hola, te hablo desde MetalHub. Me interesa tu publicación: ${data?.metal ?? ""} · ${quantity} · ${price}`,
+    );
     Linking.openURL(`https://wa.me/${phone}?text=${text}`);
   };
 
