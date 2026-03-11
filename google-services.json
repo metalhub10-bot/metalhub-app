@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "169731651390",
+    "project_id": "metalhub-39b9c",
+    "storage_bucket": "metalhub-39b9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169731651390:android:5888bb0b19853f1baa5e6f",
+        "android_client_info": {
+          "package_name": "com.metalhub.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkRL0G9bQdwGh7I0a60272tlP5xKBIHbw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -83,7 +83,7 @@ export function ListingCard({
           )}
           {urgent && (
             <View style={styles.badgeUrgent}>
-              <Ionicons name="flash" size={12} color={colors.primary} />
+              <Ionicons name="flash" size={12} color="#fff" />
               <Text style={styles.badgeUrgentText}>Urgente</Text>
             </View>
           )}
@@ -183,12 +183,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(240,185,11,0.2)",
+    backgroundColor: colors.danger,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,
   },
-  badgeUrgentText: { color: colors.primary, fontSize: 11, fontWeight: "600" },
+  badgeUrgentText: { color: "#fff", fontSize: 11, fontWeight: "600" },
   badgeClosed: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,

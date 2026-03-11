@@ -102,7 +102,8 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.iconWrap}>
           {avatarUri ? (
             <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
@@ -118,7 +119,6 @@ export default function RegisterScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Crear cuenta</Text>
           <Text style={styles.subtitle}>Únete a MetalHub</Text>
           <TextInput style={styles.input} placeholder="Nombre completo" placeholderTextColor={colors.textMuted} value={name} onChangeText={setName} editable={!loading} />
@@ -214,7 +214,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
-  scrollContent: { padding: spacing.lg, paddingTop: spacing.lg },
+  scrollContent: { padding: spacing.lg, paddingTop: spacing.lg, flexGrow: 1 },
   iconWrap: { alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.lg },
   passwordRow: {
     marginBottom: spacing.md,

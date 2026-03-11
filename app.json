@@ -17,6 +17,7 @@
     },
     "android": {
       "package": "com.metalhub.app",
+      "googleServicesFile": "./google-services.json",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#0D0D0F",
@@ -25,9 +26,7 @@
         "monochromeImage": "./assets/images/icon.png"
       }
     },
-    "plugins": [
-      "expo-router"
-    ],
+    "plugins": ["expo-router", "expo-notifications"],
     "experiments": {
       "typedRoutes": true
     },

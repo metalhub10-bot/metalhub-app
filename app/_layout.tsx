@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+
+import { ensurePushTokenRegistered } from '@/services/pushNotifications';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -9,6 +12,12 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  useEffect(() => {
+    // Registrar token de notificaciones push cuando la app se monta,
+    // siempre que haya una sesión activa en el backend.
+    ensurePushTokenRegistered();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />

@@ -109,6 +109,19 @@ export async function updateMe(body: { nombre?: string; bio?: string; ubicacion?
   return res.json();
 }
 
+/**
+ * Registrar o actualizar el token de notificaciones push Expo para el usuario actual.
+ */
+export async function updatePushToken(token: string): Promise<ApiResponse> {
+  const headers = await authHeaders();
+  const res = await fetch(getApiUrl('/api/v1/users/push-token'), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ token }),
+  });
+  return res.json();
+}
+
 // ——— Publicaciones ———
 
 export type PublicacionListParams = {
@@ -119,6 +132,7 @@ export type PublicacionListParams = {
   ubicacion?: string;
   pagina?: number;
   limite?: number;
+  urgente?: boolean;
 };
 
 export type PublicacionItem = {
@@ -149,6 +163,7 @@ export async function getPublicaciones(params: PublicacionListParams = {}): Prom
   if (params.ubicacion) q.set('ubicacion', params.ubicacion);
   if (params.pagina != null) q.set('pagina', String(params.pagina));
   if (params.limite != null) q.set('limite', String(params.limite));
+  if (params.urgente != null) q.set('urgente', String(params.urgente));
   const url = getApiUrl('/api/v1/publicaciones') + (q.toString() ? `?${q.toString()}` : '');
   const res = await fetch(url);
   return res.json();

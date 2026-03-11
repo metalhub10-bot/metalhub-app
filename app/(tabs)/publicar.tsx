@@ -30,6 +30,7 @@ export default function PublicarScreen() {
   const [metales, setMetales] = useState<{ id: string; nombre: string }[]>([]);
   const [loadingMetales, setLoadingMetales] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isExpress, setIsExpress] = useState(false);
 
   useEffect(() => {
     // En esta versión usamos catálogo local para metales y variantes
@@ -101,7 +102,7 @@ export default function PublicarScreen() {
         descripcion: description.trim() || undefined,
         entrega: delivery ? DELIVERY_MAP[delivery] : undefined,
         ubicacion: location.trim() || undefined,
-        urgente: false,
+        urgente: isExpress,
       });
       assertSuccess(res);
       Alert.alert('Publicado', 'Tu oferta se publicó correctamente.', [
@@ -251,8 +252,47 @@ export default function PublicarScreen() {
         ))}
         <Text style={styles.sectionLabel}>UBICACIÓN</Text>
         <TextInput style={styles.inputFull} placeholder="Ciudad, provincia" placeholderTextColor={colors.textMuted} value={location} onChangeText={setLocation} editable={!submitting} />
-        <TouchableOpacity style={styles.publishButton} activeOpacity={0.8} onPress={handlePublish} disabled={submitting}>
-          {submitting ? <ActivityIndicator color="#0D0D0F" /> : <Text style={styles.publishButtonText}>Publicar oferta</Text>}
+        <Text style={styles.sectionLabel}>TIPO DE PUBLICACIÓN</Text>
+        <View style={styles.expressRow}>
+          <TouchableOpacity
+            style={[styles.expressOption, !isExpress && styles.expressOptionActive]}
+            onPress={() => setIsExpress(false)}
+            disabled={submitting}
+          >
+            <Ionicons name="calendar-outline" size={18} color={!isExpress ? colors.text : colors.textSecondary} />
+            <View>
+              <Text style={[styles.expressOptionTitle, !isExpress && styles.expressOptionTitleActive]}>Estándar</Text>
+              <Text style={styles.expressOptionSub}>Expira en 7 días</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.expressOption, isExpress && styles.expressOptionUrgentActive]}
+            onPress={() => setIsExpress(true)}
+            disabled={submitting}
+          >
+            <Ionicons name="flash" size={18} color={isExpress ? '#fff' : colors.textSecondary} />
+            <View>
+              <Text style={[styles.expressOptionTitle, isExpress && styles.expressOptionTitleUrgent]}>Express</Text>
+              <Text style={[styles.expressOptionSub, isExpress && styles.expressOptionSubUrgent]}>Expira en 24h</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          style={[styles.publishButton, isExpress && styles.publishButtonExpress]}
+          activeOpacity={0.8}
+          onPress={handlePublish}
+          disabled={submitting}
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              {isExpress && <Ionicons name="flash" size={18} color="#fff" />}
+              <Text style={[styles.publishButtonText, isExpress && styles.publishButtonTextExpress]}>
+                {isExpress ? 'Publicar Express' : 'Publicar oferta'}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -293,6 +333,27 @@ const styles = StyleSheet.create({
   deliveryOptionActive: { borderColor: colors.primary },
   deliveryText: { color: colors.text, fontSize: 15 },
   deliveryTextActive: { color: colors.primary, fontWeight: '600' },
-  publishButton: { backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', marginTop: spacing.xl, minHeight: 52, justifyContent: 'center' },
+  expressRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+  expressOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  expressOptionActive: { borderColor: colors.border },
+  expressOptionUrgentActive: { backgroundColor: colors.danger, borderColor: colors.danger },
+  expressOptionTitle: { color: colors.textSecondary, fontSize: 14, fontWeight: '600' },
+  expressOptionTitleActive: { color: colors.text },
+  expressOptionTitleUrgent: { color: '#fff' },
+  expressOptionSub: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
+  expressOptionSubUrgent: { color: 'rgba(255,255,255,0.8)' },
+  publishButton: { flexDirection: 'row', gap: 6, backgroundColor: colors.primary, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginTop: spacing.xl, minHeight: 52 },
+  publishButtonExpress: { backgroundColor: colors.danger },
   publishButtonText: { color: '#0D0D0F', fontSize: 16, fontWeight: '700' },
+  publishButtonTextExpress: { color: '#fff' },
 });
