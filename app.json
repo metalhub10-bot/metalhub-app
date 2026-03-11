@@ -18,11 +18,12 @@
     "android": {
       "package": "com.metalhub.app",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 1,
-      "notification": {
-        "icon": "./assets/images/notification-icon.png",
-        "color": "#0D0D0F"
-      },
+      "versionCode": 3,
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#0D0D0F",
         "foregroundImage": "./assets/images/icon.png",
@@ -30,14 +31,24 @@
         "monochromeImage": "./assets/images/icon.png"
       }
     },
-    "plugins": ["expo-router", "expo-notifications"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0D0D0F",
+          "sounds": ["./assets/sounds/soundnotification.mp3"]
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f78d85c2-6c28-42a8-83e7-0fea8d838843"
+        "projectId": "2751620e-98f0-44a3-8bc6-9bbf749c4144"
       }
     }
   },

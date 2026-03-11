@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 
+import { getSessionId } from '@/services/api';
 import { ensurePushTokenRegistered } from '@/services/pushNotifications';
 
 export { ErrorBoundary } from 'expo-router';
@@ -13,9 +14,11 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Registrar token de notificaciones push cuando la app se monta,
-    // siempre que haya una sesión activa en el backend.
-    ensurePushTokenRegistered();
+    // Registrar token solo si ya hay sesión activa (usuario que no cerró sesión).
+    // Para usuarios nuevos, el registro ocurre en login.tsx tras el login exitoso.
+    getSessionId().then((sessionId) => {
+      if (sessionId) ensurePushTokenRegistered();
+    });
   }, []);
 
   return (

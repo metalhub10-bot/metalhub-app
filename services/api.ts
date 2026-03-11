@@ -3,17 +3,17 @@
  * Base URL desde EXPO_PUBLIC_API_URL (.env). Sesión en X-Session-Id.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const STORAGE_SESSION = '@metalhub_session_id';
+const STORAGE_SESSION = "@metalhub_session_id";
 
 const getBaseUrl = (): string => {
-  return "https://metalhub-server.vercel.app/" // 'http://localhost:3000';
+  return "https://metalhub-server.vercel.app/"; // 'http://localhost:3000';
 };
 
 const getApiUrl = (path: string): string => {
-  const base = getBaseUrl().replace(/\/$/, '');
-  const p = path.startsWith('/') ? path : `/${path}`;
+  const base = getBaseUrl().replace(/\/$/, "");
+  const p = path.startsWith("/") ? path : `/${path}`;
   return `${base}${p}`;
 };
 
@@ -35,8 +35,10 @@ export async function clearSession(): Promise<void> {
 /** Cabeceras por defecto para peticiones autenticadas */
 async function authHeaders(): Promise<Record<string, string>> {
   const sessionId = await getSessionId();
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (sessionId) headers['X-Session-Id'] = sessionId;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (sessionId) headers["X-Session-Id"] = sessionId;
   return headers;
 }
 
@@ -46,14 +48,22 @@ export type ApiResponse<T = unknown> = {
   data?: T;
   message?: string;
   error?: string;
-  user?: { id: string; email: string; nombre: string; whatsapp?: string; [k: string]: unknown };
+  user?: {
+    id: string;
+    email: string;
+    nombre: string;
+    whatsapp?: string;
+    [k: string]: unknown;
+  };
   sessionId?: string;
 };
 
 /** Lanzar si la respuesta no es success (opcional) */
-export function assertSuccess<T>(res: ApiResponse<T>): asserts res is ApiResponse<T> & { success: true } {
+export function assertSuccess<T>(
+  res: ApiResponse<T>,
+): asserts res is ApiResponse<T> & { success: true } {
   if (!res.success) {
-    const msg = res.message ?? res.error ?? 'Error en la petición';
+    const msg = res.message ?? res.error ?? "Error en la petición";
     throw new Error(msg);
   }
 }
@@ -67,18 +77,21 @@ export async function registerUser(
   avatarUrl?: string,
   whatsapp?: string,
 ): Promise<ApiResponse> {
-  const res = await fetch(getApiUrl('/api/v1/auth/register'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const res = await fetch(getApiUrl("/api/v1/auth/register"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password, nombre, avatarUrl, whatsapp }),
   });
   return res.json();
 }
 
-export async function loginUser(email: string, password: string): Promise<ApiResponse & { sessionId?: string }> {
-  const res = await fetch(getApiUrl('/api/v1/auth/login'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export async function loginUser(
+  email: string,
+  password: string,
+): Promise<ApiResponse & { sessionId?: string }> {
+  const res = await fetch(getApiUrl("/api/v1/auth/login"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
   return res.json();
@@ -86,38 +99,36 @@ export async function loginUser(email: string, password: string): Promise<ApiRes
 
 export async function logoutUser(): Promise<ApiResponse> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl('/api/v1/auth/logout'), { method: 'POST', headers });
+  const res = await fetch(getApiUrl("/api/v1/auth/logout"), {
+    method: "POST",
+    headers,
+  });
   return res.json();
 }
 
 // ——— Users ———
 
 /** Respuesta: { success, user } (user en raíz, no en data) */
-export async function getMe(): Promise<ApiResponse & { user?: Record<string, unknown> }> {
+export async function getMe(): Promise<
+  ApiResponse & { user?: Record<string, unknown> }
+> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl('/api/v1/users/me'), { headers });
+  const res = await fetch(getApiUrl("/api/v1/users/me"), { headers });
   return res.json();
 }
 
-export async function updateMe(body: { nombre?: string; bio?: string; ubicacion?: string; avatarUrl?: string; whatsapp?: string }): Promise<ApiResponse> {
+export async function updateMe(body: {
+  nombre?: string;
+  bio?: string;
+  ubicacion?: string;
+  avatarUrl?: string;
+  whatsapp?: string;
+}): Promise<ApiResponse> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl('/api/v1/users/me'), {
-    method: 'PUT',
+  const res = await fetch(getApiUrl("/api/v1/users/me"), {
+    method: "PUT",
     headers,
     body: JSON.stringify(body),
-  });
-  return res.json();
-}
-
-/**
- * Registrar o actualizar el token de notificaciones push Expo para el usuario actual.
- */
-export async function updatePushToken(token: string): Promise<ApiResponse> {
-  const headers = await authHeaders();
-  const res = await fetch(getApiUrl('/api/v1/users/push-token'), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ token }),
   });
   return res.json();
 }
@@ -125,8 +136,8 @@ export async function updatePushToken(token: string): Promise<ApiResponse> {
 // ——— Publicaciones ———
 
 export type PublicacionListParams = {
-  tipo?: 'todos' | 'compran' | 'venden';
-  orden?: 'reciente' | 'precio_asc' | 'precio_desc' | 'volumen';
+  tipo?: "todos" | "compran" | "venden";
+  orden?: "reciente" | "precio_asc" | "precio_desc" | "volumen";
   busqueda?: string;
   metal?: string;
   ubicacion?: string;
@@ -135,75 +146,100 @@ export type PublicacionListParams = {
   urgente?: boolean;
 };
 
-export type Unidad = 'kg' | 'tn' | 'un';
-
-export function formatUnidadLabel(unidad?: string): string {
-  if (!unidad) return '';
-  if (unidad === 'un') return 'unidades';
-  return unidad;
-}
-
-export function formatPrecioSuffix(unidad?: string): string {
-  if (!unidad) return 'kg';
-  if (unidad === 'un') return 'unidad';
-  return unidad === 'tn' ? 'tn' : 'kg';
-}
-
 export type PublicacionItem = {
   id: string;
-  tipo: 'vendo' | 'compro';
+  tipo: "vendo" | "compro";
   metal: string;
   cantidad: number;
-  unidad: Unidad | string;
+  unidad: string;
   precio?: number;
   precioAConvenir: boolean;
   descripcion?: string;
   entrega?: string;
   ubicacion?: string;
-  usuario?: { id: string; nombre: string; rating?: number; ubicacion?: string; verificado?: boolean; whatsapp?: string; avatarUrl?: string };
+  usuario?: {
+    id: string;
+    nombre: string;
+    rating?: number;
+    ubicacion?: string;
+    verificado?: boolean;
+    whatsapp?: string;
+    avatarUrl?: string;
+  };
   urgente?: boolean;
   cerrada?: boolean;
   creadoEn: string;
 };
 
-export type PublicacionesListResponse = ApiResponse<PublicacionItem[]> & { total?: number };
+export type PublicacionesListResponse = ApiResponse<PublicacionItem[]> & {
+  total?: number;
+};
 
-export async function getPublicaciones(params: PublicacionListParams = {}): Promise<PublicacionesListResponse> {
+export async function getPublicaciones(
+  params: PublicacionListParams = {},
+): Promise<PublicacionesListResponse> {
   const q = new URLSearchParams();
-  if (params.tipo && params.tipo !== 'todos') q.set('tipo', params.tipo);
-  if (params.orden) q.set('orden', params.orden === 'reciente' ? 'reciente' : params.orden === 'precio_asc' ? 'precio_asc' : params.orden === 'precio_desc' ? 'precio_desc' : params.orden === 'volumen' ? 'volumen' : 'reciente');
-  if (params.busqueda) q.set('busqueda', params.busqueda);
-  if (params.metal) q.set('metal', params.metal);
-  if (params.ubicacion) q.set('ubicacion', params.ubicacion);
-  if (params.pagina != null) q.set('pagina', String(params.pagina));
-  if (params.limite != null) q.set('limite', String(params.limite));
-  if (params.urgente != null) q.set('urgente', String(params.urgente));
-  const url = getApiUrl('/api/v1/publicaciones') + (q.toString() ? `?${q.toString()}` : '');
+  if (params.tipo && params.tipo !== "todos") q.set("tipo", params.tipo);
+  if (params.orden)
+    q.set(
+      "orden",
+      params.orden === "reciente"
+        ? "reciente"
+        : params.orden === "precio_asc"
+          ? "precio_asc"
+          : params.orden === "precio_desc"
+            ? "precio_desc"
+            : params.orden === "volumen"
+              ? "volumen"
+              : "reciente",
+    );
+  if (params.busqueda) q.set("busqueda", params.busqueda);
+  if (params.metal) q.set("metal", params.metal);
+  if (params.ubicacion) q.set("ubicacion", params.ubicacion);
+  if (params.pagina != null) q.set("pagina", String(params.pagina));
+  if (params.limite != null) q.set("limite", String(params.limite));
+  if (params.urgente != null) q.set("urgente", String(params.urgente));
+  const url =
+    getApiUrl("/api/v1/publicaciones") +
+    (q.toString() ? `?${q.toString()}` : "");
   const res = await fetch(url);
   return res.json();
 }
 
-export async function getPublicacionById(id: string): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem } & { esPropia?: boolean }> {
+export async function getPublicacionById(
+  id: string,
+): Promise<
+  ApiResponse<PublicacionItem> & { data?: PublicacionItem } & {
+    esPropia?: boolean;
+  }
+> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), { headers });
+  const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), {
+    headers,
+  });
   return res.json();
 }
 
-export async function getMisPublicaciones(params?: { pagina?: number; limite?: number }): Promise<PublicacionesListResponse> {
+export async function getMisPublicaciones(params?: {
+  pagina?: number;
+  limite?: number;
+}): Promise<PublicacionesListResponse> {
   const headers = await authHeaders();
   const q = new URLSearchParams();
-  if (params?.pagina != null) q.set('pagina', String(params.pagina));
-  if (params?.limite != null) q.set('limite', String(params.limite));
-  const url = getApiUrl('/api/v1/publicaciones/mias') + (q.toString() ? `?${q.toString()}` : '');
+  if (params?.pagina != null) q.set("pagina", String(params.pagina));
+  if (params?.limite != null) q.set("limite", String(params.limite));
+  const url =
+    getApiUrl("/api/v1/publicaciones/mias") +
+    (q.toString() ? `?${q.toString()}` : "");
   const res = await fetch(url, { headers });
   return res.json();
 }
 
 export type CreatePublicacionBody = {
-  tipo: 'vendo' | 'compro';
+  tipo: "vendo" | "compro";
   metal: string;
   cantidad: number;
-  unidad: Unidad;
+  unidad: "kg" | "tn";
   precio?: number;
   precioAConvenir: boolean;
   descripcion?: string;
@@ -216,20 +252,25 @@ export type UpdatePublicacionBody = Partial<CreatePublicacionBody> & {
   cerrada?: boolean;
 };
 
-export async function createPublicacion(body: CreatePublicacionBody): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
+export async function createPublicacion(
+  body: CreatePublicacionBody,
+): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl('/api/v1/publicaciones'), {
-    method: 'POST',
+  const res = await fetch(getApiUrl("/api/v1/publicaciones"), {
+    method: "POST",
     headers,
     body: JSON.stringify(body),
   });
   return res.json();
 }
 
-export async function updatePublicacion(id: string, body: UpdatePublicacionBody): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
+export async function updatePublicacion(
+  id: string,
+  body: UpdatePublicacionBody,
+): Promise<ApiResponse<PublicacionItem> & { data?: PublicacionItem }> {
   const headers = await authHeaders();
   const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), {
-    method: 'PUT',
+    method: "PUT",
     headers,
     body: JSON.stringify(body),
   });
@@ -238,28 +279,57 @@ export async function updatePublicacion(id: string, body: UpdatePublicacionBody)
 
 export async function deletePublicacion(id: string): Promise<ApiResponse> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), { method: 'DELETE', headers });
+  const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), {
+    method: "DELETE",
+    headers,
+  });
   return res.json();
 }
 
 // ——— Metales ———
 
-export async function getMetales(): Promise<ApiResponse<{ id: string; nombre: string }[]>> {
-  const res = await fetch(getApiUrl('/api/v1/metales'));
+export async function getMetales(): Promise<
+  ApiResponse<{ id: string; nombre: string }[]>
+> {
+  const res = await fetch(getApiUrl("/api/v1/metales"));
   const json = await res.json();
   if (json.success && Array.isArray(json.data)) return json;
   return { success: true, data: [] };
 }
 
+// ——— Push Notifications ———
+
+export async function updatePushToken(token: string): Promise<ApiResponse> {
+  const headers = await authHeaders();
+  const res = await fetch(getApiUrl('/api/v1/users/push-token'), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ token }),
+  });
+  return res.json();
+}
+
 // ——— Suscripción ———
 
-export async function getSuscripcion(): Promise<ApiResponse<{ activa: boolean; plan?: string; vencimiento?: string }>> {
+export async function getSuscripcion(): Promise<
+  ApiResponse<{ activa: boolean; plan?: string; vencimiento?: string }>
+> {
   const headers = await authHeaders();
-  const res = await fetch(getApiUrl('/api/v1/suscripcion'), { headers });
+  const res = await fetch(getApiUrl("/api/v1/suscripcion"), { headers });
   return res.json();
 }
 
 // ——— Util: formatear fecha para lista ———
+
+export function formatUnidadLabel(unidad: string): string {
+  if (unidad === 'tn') return 'tn';
+  return 'kg';
+}
+
+export function formatPrecioSuffix(unidad: string): string {
+  if (unidad === 'tn') return 'tn';
+  return 'kg';
+}
 
 export function formatTimeAgo(isoDate: string): string {
   const d = new Date(isoDate);
@@ -268,9 +338,9 @@ export function formatTimeAgo(isoDate: string): string {
   const diffM = Math.floor(diffMs / 60000);
   const diffH = Math.floor(diffMs / 3600000);
   const diffD = Math.floor(diffMs / 86400000);
-  if (diffM < 1) return 'Ahora';
+  if (diffM < 1) return "Ahora";
   if (diffM < 60) return `Hace ${diffM}m`;
   if (diffH < 24) return `Hace ${diffH}h`;
   if (diffD < 7) return `Hace ${diffD}d`;
-  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+  return d.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
 }
