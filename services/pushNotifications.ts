@@ -20,11 +20,9 @@ function handleRegistrationError(errorMessage: string) {
 
 async function registerForPushNotificationsAsync(): Promise<string | null> {
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
+    await Notifications.setNotificationChannelAsync('metalhub', {
+      name: 'MetalHub',
       importance: Notifications.AndroidImportance.MAX,
-      // Nombre del archivo de sonido (sin ruta). En Android el sistema
-      // usará el recurso empacado con la app.
       sound: 'soundnotification.mp3',
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF231F7C',
