@@ -18,6 +18,8 @@ import {
   deletePublicacion,
   formatTimeAgo,
   type PublicacionItem,
+  formatPrecioSuffix,
+  formatUnidadLabel,
 } from "@/services/api";
 import { ListingCard } from "@/components/ListingCard";
 
@@ -103,11 +105,11 @@ export default function MisPublicacionesScreen() {
       <ListingCard
         type={item.tipo === "compro" ? "COMPRA" : "VENTA"}
         metal={item.metal}
-        quantity={`${Number(item.cantidad).toLocaleString("es-AR")} ${item.unidad}`}
+        quantity={`${Number(item.cantidad).toLocaleString("es-AR")} ${formatUnidadLabel(item.unidad)}`}
         price={
           item.precioAConvenir
             ? "$ A convenir"
-            : `$${Number(item.precio ?? 0).toLocaleString("es-AR")} /${item.unidad === "tn" ? "tn" : "kg"}`
+            : `$${Number(item.precio ?? 0).toLocaleString("es-AR")} /${formatPrecioSuffix(item.unidad)}`
         }
         description={item.descripcion ?? ""}
         userName={item.usuario?.nombre ?? ""}

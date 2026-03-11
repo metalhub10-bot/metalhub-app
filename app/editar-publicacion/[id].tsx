@@ -14,7 +14,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '@/config/theme';
 import { DELIVERY_OPTIONS } from '@/config/constants';
-import { getPublicacionById, updatePublicacion, assertSuccess } from '@/services/api';
+import { getPublicacionById, updatePublicacion, assertSuccess, type Unidad } from '@/services/api';
 
 const DELIVERY_MAP: Record<string, string> = {
   pickup_now: 'Retiro inmediato',
@@ -31,12 +31,14 @@ export default function EditarPublicacionScreen() {
   const [operation, setOperation] = useState<'vendo' | 'compro'>('vendo');
   const [metal, setMetal] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState<'kg' | 'tn'>('kg');
+  const [unit, setUnit] = useState<Unidad>('kg');
   const [price, setPrice] = useState('');
   const [priceNegotiable, setPriceNegotiable] = useState(false);
   const [description, setDescription] = useState('');
   const [delivery, setDelivery] = useState<string | null>(null);
   const [location, setLocation] = useState('');
+
+  const isBochas = /^bochas\b/i.test(metal.trim());
 
   useEffect(() => {
     if (!id) {
@@ -67,7 +69,7 @@ export default function EditarPublicacionScreen() {
           setOperation((d.tipo === 'compro' ? 'compro' : 'vendo') as 'vendo' | 'compro');
           setMetal(d.metal ?? '');
           setQuantity(String(d.cantidad ?? ''));
-          setUnit((d.unidad === 'tn' ? 'tn' : 'kg') as 'kg' | 'tn');
+          setUnit((d.unidad === 'un' ? 'un' : d.unidad === 'tn' ? 'tn' : 'kg') as Unidad);
           setPrice(d.precio != null ? String(d.precio) : '');
           setPriceNegotiable(!!d.precioAConvenir);
           setDescription(d.descripcion ?? '');
@@ -218,23 +220,33 @@ export default function EditarPublicacionScreen() {
             keyboardType="numeric"
             editable={!saving}
           />
-          <View style={styles.unitRow}>
-            <TouchableOpacity
-              style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}
-              onPress={() => setUnit('kg')}
-            >
-              <Text style={[styles.unitBtnText, unit === 'kg' && styles.unitBtnTextActive]}>kg</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.unitBtn, unit === 'tn' && styles.unitBtnActive]}
-              onPress={() => setUnit('tn')}
-            >
-              <Text style={[styles.unitBtnText, unit === 'tn' && styles.unitBtnTextActive]}>tn</Text>
-            </TouchableOpacity>
-          </View>
+          {isBochas ? (
+            <View style={styles.unitRow}>
+              <View style={[styles.unitBtn, styles.unitBtnActive]}>
+                <Text style={[styles.unitBtnText, styles.unitBtnTextActive]}>unidades</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.unitRow}>
+              <TouchableOpacity
+                style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}
+                onPress={() => setUnit('kg')}
+              >
+                <Text style={[styles.unitBtnText, unit === 'kg' && styles.unitBtnTextActive]}>kg</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.unitBtn, unit === 'tn' && styles.unitBtnActive]}
+                onPress={() => setUnit('tn')}
+              >
+                <Text style={[styles.unitBtnText, unit === 'tn' && styles.unitBtnTextActive]}>tn</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
-        <Text style={styles.sectionLabel}>PRECIO POR KG (ARS)</Text>
+        <Text style={styles.sectionLabel}>
+          {unit === 'un' ? 'PRECIO POR UNIDAD (ARS)' : 'PRECIO POR KG (ARS)'}
+        </Text>
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}

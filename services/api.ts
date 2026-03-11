@@ -135,12 +135,26 @@ export type PublicacionListParams = {
   urgente?: boolean;
 };
 
+export type Unidad = 'kg' | 'tn' | 'un';
+
+export function formatUnidadLabel(unidad?: string): string {
+  if (!unidad) return '';
+  if (unidad === 'un') return 'unidades';
+  return unidad;
+}
+
+export function formatPrecioSuffix(unidad?: string): string {
+  if (!unidad) return 'kg';
+  if (unidad === 'un') return 'unidad';
+  return unidad === 'tn' ? 'tn' : 'kg';
+}
+
 export type PublicacionItem = {
   id: string;
   tipo: 'vendo' | 'compro';
   metal: string;
   cantidad: number;
-  unidad: string;
+  unidad: Unidad | string;
   precio?: number;
   precioAConvenir: boolean;
   descripcion?: string;
@@ -189,7 +203,7 @@ export type CreatePublicacionBody = {
   tipo: 'vendo' | 'compro';
   metal: string;
   cantidad: number;
-  unidad: 'kg' | 'tn';
+  unidad: Unidad;
   precio?: number;
   precioAConvenir: boolean;
   descripcion?: string;

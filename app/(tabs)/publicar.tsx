@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius } from '@/config/theme';
 import { DELIVERY_OPTIONS, METAL_GROUPS } from '@/config/constants';
-import { getMetales, createPublicacion, getSessionId, assertSuccess } from '@/services/api';
+import { getMetales, createPublicacion, getSessionId, assertSuccess, formatUnidadLabel, type Unidad } from '@/services/api';
 
 type OperationType = 'vendo' | 'compro';
 
@@ -21,7 +21,7 @@ export default function PublicarScreen() {
   const [metalSubtype, setMetalSubtype] = useState<string | null>(null);
   const [metalOtherText, setMetalOtherText] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState<'kg' | 'tn'>('kg');
+  const [unit, setUnit] = useState<Unidad>('kg');
   const [price, setPrice] = useState('');
   const [priceNegotiable, setPriceNegotiable] = useState(false);
   const [delivery, setDelivery] = useState<string | null>(null);
@@ -31,6 +31,7 @@ export default function PublicarScreen() {
   const [loadingMetales, setLoadingMetales] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isExpress, setIsExpress] = useState(false);
+  const isBochas = metalCategory === 'bochas';
 
   useEffect(() => {
     // En esta versión usamos catálogo local para metales y variantes
@@ -41,6 +42,13 @@ export default function PublicarScreen() {
     setMetales(localMetales);
     setLoadingMetales(false);
   }, []);
+
+  useEffect(() => {
+    // Bochas se compra/vende por unidades
+    if (isBochas) setUnit('un');
+    else if (unit === 'un') setUnit('kg');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBochas]);
 
   const handlePublish = async () => {
     if (!metalCategory) {
@@ -225,16 +233,26 @@ export default function PublicarScreen() {
         <Text style={styles.sectionLabel}>CANTIDAD</Text>
         <View style={styles.inputRow}>
           <TextInput style={styles.input} placeholder="Ej: 500" placeholderTextColor={colors.textMuted} value={quantity} onChangeText={setQuantity} keyboardType="numeric" editable={!submitting} />
-          <View style={styles.unitRow}>
-            <TouchableOpacity style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]} onPress={() => setUnit('kg')}>
-              <Text style={[styles.unitBtnText, unit === 'kg' && styles.unitBtnTextActive]}>kg</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.unitBtn, unit === 'tn' && styles.unitBtnActive]} onPress={() => setUnit('tn')}>
-              <Text style={[styles.unitBtnText, unit === 'tn' && styles.unitBtnTextActive]}>tn</Text>
-            </TouchableOpacity>
-          </View>
+          {isBochas ? (
+            <View style={styles.unitRow}>
+              <View style={[styles.unitBtn, styles.unitBtnActive]}>
+                <Text style={[styles.unitBtnText, styles.unitBtnTextActive]}>{formatUnidadLabel(unit)}</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.unitRow}>
+              <TouchableOpacity style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]} onPress={() => setUnit('kg')}>
+                <Text style={[styles.unitBtnText, unit === 'kg' && styles.unitBtnTextActive]}>kg</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.unitBtn, unit === 'tn' && styles.unitBtnActive]} onPress={() => setUnit('tn')}>
+                <Text style={[styles.unitBtnText, unit === 'tn' && styles.unitBtnTextActive]}>tn</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        <Text style={styles.sectionLabel}>PRECIO POR KG (ARS)</Text>
+        <Text style={styles.sectionLabel}>
+          {unit === 'un' ? 'PRECIO POR UNIDAD (ARS)' : 'PRECIO POR KG (ARS)'}
+        </Text>
         <View style={styles.inputRow}>
           <TextInput style={styles.input} placeholder="Ej: 5200" placeholderTextColor={colors.textMuted} value={price} onChangeText={setPrice} keyboardType="numeric" editable={!priceNegotiable && !submitting} />
           <TouchableOpacity style={[styles.convenirBtn, priceNegotiable && styles.convenirBtnActive]} onPress={() => setPriceNegotiable(!priceNegotiable)}>

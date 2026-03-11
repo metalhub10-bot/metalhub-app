@@ -25,16 +25,18 @@ import {
   getPublicaciones,
   formatTimeAgo,
   type PublicacionItem,
+  formatPrecioSuffix,
+  formatUnidadLabel,
 } from '@/services/api';
 
 type FilterTab = 'todos' | 'compran' | 'venden';
 
 function mapPublicacionToCard(p: PublicacionItem): ListingCardProps {
   const type = p.tipo === 'compro' ? 'COMPRA' : 'VENTA';
-  const quantity = `${Number(p.cantidad).toLocaleString('es-AR')} ${p.unidad}`;
+  const quantity = `${Number(p.cantidad).toLocaleString('es-AR')} ${formatUnidadLabel(p.unidad)}`;
   const price = p.precioAConvenir
     ? '$ A convenir'
-    : `$${Number(p.precio ?? 0).toLocaleString('es-AR')} /${p.unidad === 'tn' ? 'tn' : 'kg'}`;
+    : `$${Number(p.precio ?? 0).toLocaleString('es-AR')} /${formatPrecioSuffix(p.unidad)}`;
   return {
     type,
     metal: p.metal,

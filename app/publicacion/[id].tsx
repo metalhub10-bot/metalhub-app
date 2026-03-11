@@ -20,6 +20,8 @@ import {
   updatePublicacion,
   deletePublicacion,
   assertSuccess,
+  formatPrecioSuffix,
+  formatUnidadLabel,
 } from "@/services/api";
 
 export default function PublicacionDetalleScreen() {
@@ -87,12 +89,12 @@ export default function PublicacionDetalleScreen() {
 
   const type = data?.tipo === "compro" ? "COMPRA" : "VENTA";
   const quantity = data
-    ? `${Number(data.cantidad).toLocaleString("es-AR")} ${data.unidad}`
+    ? `${Number(data.cantidad).toLocaleString("es-AR")} ${formatUnidadLabel(data.unidad)}`
     : "";
   const price = data
     ? data.precioAConvenir
       ? "$ A convenir"
-      : `$${Number(data.precio ?? 0).toLocaleString("es-AR")} /${data.unidad === "tn" ? "tn" : "kg"}`
+      : `$${Number(data.precio ?? 0).toLocaleString("es-AR")} /${formatPrecioSuffix(data.unidad)}`
     : "";
   const isVerified = data?.usuario?.verificado ?? false;
   const isUrgent = data?.urgente ?? false;
