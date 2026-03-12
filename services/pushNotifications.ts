@@ -23,7 +23,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
     await Notifications.setNotificationChannelAsync('metalhub', {
       name: 'MetalHub',
       importance: Notifications.AndroidImportance.MAX,
-      sound: 'soundnotification.mp3',
+      sound: 'soundnotification.wav',
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#FF231F7C',
     });
