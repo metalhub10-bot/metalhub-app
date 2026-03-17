@@ -239,7 +239,7 @@ export type CreatePublicacionBody = {
   tipo: "vendo" | "compro";
   metal: string;
   cantidad: number;
-  unidad: "kg" | "tn";
+  unidad: "kg" | "tn" | "un";
   precio?: number;
   precioAConvenir: boolean;
   descripcion?: string;

@@ -35,6 +35,7 @@ export const METAL_GROUPS: readonly MetalGroup[] = [
   { id: 'hierro', label: 'Hierro', variants: ['Chatarra', 'Pesado', 'Chico'] },
   { id: 'carton', label: 'Cartón', variants: ['Blanco', 'Afiche', 'Conos', 'Diarios'] },
   { id: 'plastico', label: 'Plástico' },
+  { id: 'antiguedades', label: 'Antigüedades' },
   { id: 'otro', label: 'Otro' },
 ];
 
