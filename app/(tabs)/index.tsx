@@ -13,7 +13,7 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ListingCard, ListingCardProps } from "@/components/ListingCard";
@@ -171,13 +171,6 @@ export default function MercadoScreen() {
     fetchListings();
   }, [fetchListings]);
 
-  // Actualizar badge del tab con el total de ofertas
-  const navigation = useNavigation();
-  React.useEffect(() => {
-    navigation.setOptions({
-      tabBarBadge: total > 0 ? total : undefined,
-    });
-  }, [navigation, total]);
 
   // Refrescar cada vez que la pestaña vuelve a estar en foco
   useFocusEffect(
