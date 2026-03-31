@@ -95,7 +95,7 @@ export function ListingCard({
       </Text>
       {location ? (
         <View style={styles.locationRow}>
-          <Ionicons name="location" size={12} color={colors.textMeta} />
+          <Ionicons name="location" size={12} color="#5C3D00" />
           <Text style={styles.locationText} numberOfLines={1}>
             {location}
           </Text>
@@ -124,7 +124,7 @@ export function ListingCard({
               )}
             </View>
             <View style={styles.metaRow}>
-              <Ionicons name="star" size={12} color={colors.primary} />
+              <Ionicons name="star" size={12} color="#5C3D00" />
               <Text style={styles.metaText}>{rating}</Text>
             </View>
           </View>
@@ -156,13 +156,11 @@ export function ListingCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.primary,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   header: {
     flexDirection: "row",
@@ -196,9 +194,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   badgeClosedText: { color: "#0D0D0F", fontSize: 11, fontWeight: "600" },
-  timeAgo: { color: colors.textSecondary, fontSize: 12 },
+  timeAgo: { color: "#5C3D00", fontSize: 12 },
   metalQuantity: {
-    color: colors.text,
+    color: "#0D0D0F",
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 4,
@@ -209,10 +207,10 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 4,
   },
-  locationText: { color: colors.textMeta, fontSize: 12, flexShrink: 1 },
-  price: { color: colors.text, fontSize: 15, marginBottom: 4 },
+  locationText: { color: "#5C3D00", fontSize: 12, flexShrink: 1 },
+  price: { color: "#0D0D0F", fontSize: 15, marginBottom: 4 },
   description: {
-    color: colors.textSecondary,
+    color: "#5C3D00",
     fontSize: 13,
     marginBottom: spacing.md,
   },
@@ -223,21 +221,21 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: "rgba(0,0,0,0.15)",
   },
   userRow: { flexDirection: "row", alignItems: "center", flex: 1 },
   avatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.borderLight,
+    backgroundColor: "rgba(0,0,0,0.15)",
     marginRight: spacing.sm,
   },
   userInfo: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  userName: { color: colors.text, fontSize: 13, fontWeight: "600" },
+  userName: { color: "#0D0D0F", fontSize: 13, fontWeight: "600" },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  metaText: { color: colors.textSecondary, fontSize: 12 },
+  metaText: { color: "#5C3D00", fontSize: 12 },
   contactButton: {
     flexDirection: "row",
     alignItems: "center",
