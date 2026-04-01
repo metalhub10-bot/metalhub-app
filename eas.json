@@ -19,6 +19,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios":{
+        "appleId": "soportemetalhub@gmail.com",
+        "ascAppId": "6761429685",
+        "appleTeamId": "7PBWGUV6WQ"
+      }
+    }
   }
 }

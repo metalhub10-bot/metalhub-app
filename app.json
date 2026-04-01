@@ -13,7 +13,12 @@
       "backgroundColor": "#0D0D0F"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.metalhub.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.metalhub.app",
@@ -38,7 +43,9 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#0D0D0F",
-          "sounds": ["./assets/sounds/soundnotification.wav"]
+          "sounds": [
+            "./assets/sounds/soundnotification.wav"
+          ]
         }
       ]
     ],
