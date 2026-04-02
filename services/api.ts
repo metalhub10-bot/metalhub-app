@@ -277,6 +277,15 @@ export async function updatePublicacion(
   return res.json();
 }
 
+export async function deleteAccount(): Promise<ApiResponse> {
+  const headers = await authHeaders();
+  const res = await fetch(getApiUrl("/api/v1/users/me"), {
+    method: "DELETE",
+    headers,
+  });
+  return res.json();
+}
+
 export async function deletePublicacion(id: string): Promise<ApiResponse> {
   const headers = await authHeaders();
   const res = await fetch(getApiUrl(`/api/v1/publicaciones/${id}`), {

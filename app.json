@@ -17,7 +17,8 @@
       "bundleIdentifier": "com.metalhub.app",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "MetalHub necesita acceso a tu galería para que puedas seleccionar y subir fotos en tus publicaciones de compra/venta de metales."
       }
     },
     "android": {
@@ -47,7 +48,8 @@
             "./assets/sounds/soundnotification.wav"
           ]
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -17,7 +17,7 @@ import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import Constants from "expo-constants";
 import { colors, spacing, borderRadius } from "@/config/theme";
-import { getMe, logoutUser, clearSession } from "@/services/api";
+import { getMe, logoutUser, clearSession, deleteAccount } from "@/services/api";
 
 const appVersion = Constants.expoConfig?.version ?? "1.0.0";
 const appVersionDisplay =
@@ -44,6 +44,7 @@ export default function PerfilScreen() {
   const [user, setUser] = useState<ProfileUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const loadProfile = React.useCallback(async () => {
     try {
@@ -74,6 +75,44 @@ export default function PerfilScreen() {
       if (user !== null) loadProfile();
     }, [loadProfile, user]),
   );
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Eliminar cuenta",
+      "¿Estás seguro? Esta acción es irreversible. Tu cuenta y todos tus datos serán eliminados permanentemente.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar cuenta",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              "Confirmar eliminación",
+              "Esta es tu última oportunidad. ¿Confirmas que deseas eliminar tu cuenta?",
+              [
+                { text: "Cancelar", style: "cancel" },
+                {
+                  text: "Sí, eliminar",
+                  style: "destructive",
+                  onPress: async () => {
+                    setDeletingAccount(true);
+                    try {
+                      await deleteAccount();
+                    } catch {
+                      // ignore
+                    }
+                    await clearSession();
+                    setDeletingAccount(false);
+                    router.replace("/login");
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert("Cerrar sesión", "¿Seguro que quieres salir?", [
@@ -260,6 +299,20 @@ export default function PerfilScreen() {
             <Text style={styles.logoutText}>Cerrar sesión</Text>
           )}
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteAccountBtn}
+          onPress={handleDeleteAccount}
+          disabled={deletingAccount}
+        >
+          {deletingAccount ? (
+            <ActivityIndicator size="small" color={colors.danger} />
+          ) : (
+            <>
+              <Ionicons name="trash-outline" size={16} color={colors.danger} />
+              <Text style={styles.deleteAccountText}>Eliminar cuenta</Text>
+            </>
+          )}
+        </TouchableOpacity>
         <Text style={styles.versionText}>{appVersionDisplay}</Text>
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -409,6 +462,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logoutText: { color: colors.danger, fontSize: 15, fontWeight: "600" },
+  deleteAccountBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: spacing.sm,
+    minHeight: 40,
+  },
+  deleteAccountText: { color: colors.danger, fontSize: 13, fontWeight: "400" },
   versionText: {
     marginTop: spacing.lg,
     textAlign: "center",
