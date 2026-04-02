@@ -2,7 +2,7 @@
   "expo": {
     "name": "MetalHub",
     "slug": "metalhub",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "metalhub",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.metalhub.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "MetalHub necesita acceso a tu galería para que puedas seleccionar y subir fotos en tus publicaciones de compra/venta de metales."
