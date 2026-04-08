@@ -135,6 +135,7 @@ export default function MercadoScreen() {
           busqueda: debouncedSearch.trim() || undefined,
           metal: metalQuery,
           ubicacion: locationFilter.trim() || undefined,
+          urgente: false,
           limite: 50,
         });
         if (res.success && Array.isArray(res.data)) {
