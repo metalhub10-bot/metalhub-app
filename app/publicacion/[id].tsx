@@ -22,6 +22,8 @@ import {
   assertSuccess,
   formatPrecioSuffix,
   formatUnidadLabel,
+  addVista,
+  addContacto,
 } from "@/services/api";
 
 export default function PublicacionDetalleScreen() {
@@ -45,7 +47,6 @@ export default function PublicacionDetalleScreen() {
       ubicacion?: string;
       verificado?: boolean;
       whatsapp?: string;
-      avatarUrl?: string;
     };
     urgente?: boolean;
     cerrada?: boolean;
@@ -87,6 +88,12 @@ export default function PublicacionDetalleScreen() {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (!data || isOwner) return;
+
+    addVista(id).catch(console.error);
+  }, [data, isOwner])
+
   const type = data?.tipo === "compro" ? "COMPRA" : "VENTA";
   const quantity = data
     ? `${Number(data.cantidad).toLocaleString("es-AR")} ${formatUnidadLabel(data.unidad)}`
@@ -100,7 +107,7 @@ export default function PublicacionDetalleScreen() {
   const isUrgent = data?.urgente ?? false;
   const timeAgo = data?.creadoEn ? formatTimeAgo(data.creadoEn) : "";
 
-  const handleContact = () => {
+  const handleContact = async () => {
     if (data?.cerrada || isOwner) return;
     const phone = (data?.usuario?.whatsapp || "5491112345678").replace(
       /\D/g,
@@ -110,6 +117,12 @@ export default function PublicacionDetalleScreen() {
     const text = encodeURIComponent(
       `Hola, te hablo desde MetalHub. Me interesa tu publicación: ${data?.metal ?? ""} · ${quantity} · ${price}`,
     );
+    try {
+      await addContacto(String(id));
+      console.log('Enviado')
+    } catch (err) {
+      console.error(err);
+    }
     Linking.openURL(`https://wa.me/${phone}?text=${text}`);
   };
 
@@ -254,14 +267,6 @@ export default function PublicacionDetalleScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Publicado por</Text>
           <View style={styles.userRow}>
-            {data.usuario?.avatarUrl ? (
-              <Image
-                source={{ uri: data.usuario.avatarUrl }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatar} />
-            )}
             <View style={styles.userInfo}>
               <View style={styles.nameRow}>
                 <Text style={styles.userName}>

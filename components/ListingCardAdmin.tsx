@@ -12,7 +12,7 @@ import { colors, spacing, borderRadius } from "@/config/theme";
 
 export type ListingType = "COMPRA" | "VENTA";
 
-export interface ListingCardProps {
+export interface ListingCardAdminProps {
   type: ListingType;
   metal: string;
   quantity: string;
@@ -31,7 +31,7 @@ export interface ListingCardProps {
   onPress?: () => void;
 }
 
-export function ListingCard({
+export function ListingCardAdmin({
   id,
   type,
   metal,
@@ -51,7 +51,7 @@ export function ListingCard({
   whatsappNumber,
   onContact,
   onPress,
-}: ListingCardProps) {
+}: ListingCardAdminProps) {
   const handleContact = async () => {
     if (onContact) {
       onContact();
@@ -107,48 +107,24 @@ export function ListingCard({
       <Text style={styles.price}>{price}</Text>
       {description ? (
         <Text style={styles.description} numberOfLines={2}>
-          {description}
+          {userName}
         </Text>
         ) : null}
       <View style={styles.footer}>
         <View style={styles.userRow}>
-          <View style={styles.userInfo}>
-            <View style={styles.nameRow}>
-              <Text style={styles.userName}>{userName}{contacts}</Text>
-              {verified && (
-                <Ionicons
-                  name="checkmark-circle"
-                  size={16}
-                  color={colors.info}
-                />
-              )}
-            </View>
             <View style={styles.metaRow}>
-              <Ionicons name="star" size={12} color="rgb(212, 160, 23)" />
+              <Ionicons name="star" size={14} color={colors.text} />
               <Text style={styles.metaText}>{rating}</Text>
             </View>
+            <View style={styles.metaRow}>
+              <Ionicons name="eye-outline" size={14} color={colors.text} />
+              <Text style={styles.metaText}>{views}</Text>
+            </View>
+            <View style={styles.metaRow}>
+              <Ionicons name="chatbubbles-outline" size={14} color={colors.text} />
+              <Text style={styles.metaText}>{contacts}</Text>
+            </View>
           </View>
-        </View>
-        <TouchableOpacity
-          style={[styles.contactButton, closed && styles.contactButtonDisabled]}
-          onPress={closed ? undefined : handleContact}
-          activeOpacity={closed ? 1 : 0.8}
-          disabled={closed}
-        >
-          <Ionicons
-            name="chatbubble"
-            size={18}
-            color={closed ? colors.textSecondary : "#fff"}
-          />
-          <Text
-            style={[
-              styles.contactButtonText,
-              closed && styles.contactButtonTextDisabled,
-            ]}
-          >
-            {closed ? "Cerrada" : "Contactar"}
-          </Text>
-        </TouchableOpacity>
       </View>
     </CardWrapper>
   );
@@ -227,7 +203,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.2)",
   },
-  userRow: { flexDirection: "row", alignItems: "center", flex: 1 },
+  userRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: spacing.lg,
+  },
   avatar: {
     width: 32,
     height: 32,
@@ -238,8 +219,8 @@ const styles = StyleSheet.create({
   userInfo: { flex: 1 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   userName: { color: "#CCC", fontSize: 13, fontWeight: "600" },
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  metaText: { color: "rgb(212, 160, 23)", fontSize: 12 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: 2 },
+  metaText: { color: colors.text, fontSize: 12 },
   contactButton: {
     flexDirection: "row",
     alignItems: "center",

@@ -16,21 +16,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { ListingCard, ListingCardProps } from "@/components/ListingCard";
+import { ListingCardAdmin, ListingCardAdminProps } from "@/components/ListingCardAdmin";
 import { FilterTabs } from "@/components/FilterTabs";
 import { SearchBar } from "@/components/SearchBar";
 import { colors, spacing, borderRadius } from "@/config/theme";
 import { SORT_OPTIONS, METAL_GROUPS } from "@/config/constants";
 import {
   getPublicaciones,
-  addContacto,
   formatTimeAgo,
   type PublicacionItem,
 } from "@/services/api";
 
 type FilterTab = "todos" | "compran" | "venden";
 
-function mapPublicacionToCard(p: PublicacionItem): ListingCardProps {
+function mapPublicacionToCard(p: PublicacionItem): ListingCardAdminProps {
   const type = p.tipo === "compro" ? "COMPRA" : "VENTA";
   const quantity = `${Number(p.cantidad).toLocaleString("es-AR")} ${p.unidad}`;
   const price = p.precioAConvenir
@@ -51,6 +50,8 @@ function mapPublicacionToCard(p: PublicacionItem): ListingCardProps {
     whatsappNumber: p.usuario?.whatsapp,
     avatarUrl: p.usuario?.avatarUrl,
     closed: p.cerrada ?? false,
+    views: p.vistas ?? 0,
+    contacts: p.contactos ?? 0,
   };
 }
 
@@ -63,16 +64,16 @@ export default function MercadoScreen() {
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [filtersModalVisible, setFiltersModalVisible] = useState(false);
   const [sortId, setSortId] = useState("recent");
-  const [selectedPublication, setSelectedPublication] =
-    useState<PublicacionItem | null>(null);
   const [contactModalVisible, setContactModalVisible] = useState(false);
-  const [contactListing, setContactListing] = useState<ListingCardProps | null>(
+  const [contactListing, setContactListing] = useState<ListingCardAdminProps | null>(
     null,
   );
   const [listings, setListings] = useState<PublicacionItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedPublication, setSelectedPublication] =
+    useState<PublicacionItem | null>(null);
   const [metalCategoryFilter, setMetalCategoryFilter] = useState<string | null>(
     null,
   );
@@ -196,7 +197,7 @@ export default function MercadoScreen() {
   }, [listings]);
 
   const handleContactPress = (
-    item: ListingCardProps,
+    item: ListingCardAdminProps,
     pub: PublicacionItem
   ) => {
     setContactListing(item);
@@ -228,7 +229,7 @@ export default function MercadoScreen() {
     setSelectedPublication(null);
   };
 
-  const handleCardPress = (item: ListingCardProps, pub: PublicacionItem) => {
+  const handleCardPress = (item: ListingCardAdminProps, pub: PublicacionItem) => {
     router.push({
       pathname: "/publicacion/[id]",
       params: { id: pub.id },
@@ -249,37 +250,15 @@ export default function MercadoScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.logo}>MetalHub</Text>
-            <View style={styles.headerBadges}>
-              <View style={styles.badgePillGreen}>
-                <View style={styles.badgeDot} />
-                <Text style={styles.badgeGreenText}>
-                  {connectedCount} conectados
-                </Text>
-              </View>
-              <View style={styles.badgePillYellow}>
-                <Ionicons name="pulse" size={12} color={colors.primary} />
-                <Text style={styles.badgeYellowText}>
-                  {total} ofertas activas
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.headerIcons}>
+        <View style={styles.allContent}>
+          <View style={styles.upperDiv}>
             <TouchableOpacity
               style={styles.iconBtn}
-              onPress={() => {
-                setTempMetalCategoryFilter(metalCategoryFilter);
-                setTempMetalSubtypeFilter(metalSubtypeFilter);
-                setTempMetalOtherText(metalOtherFilter);
-                setTempLocationFilter(locationFilter);
-                setFiltersModalVisible(true);
-              }}
+              onPress={() => router.push("/(admin)")}
             >
-              <Ionicons name="options" size={22} color={colors.text} />
+              <Ionicons name="arrow-back-outline" size={24} color={colors.text} />
             </TouchableOpacity>
+            <Text style={styles.logo}>Publicaciones</Text>
           </View>
         </View>
 
@@ -311,7 +290,7 @@ export default function MercadoScreen() {
           renderItem={({ item: pub }) => {
             const card = mapPublicacionToCard(pub);
             return (
-              <ListingCard
+              <ListingCardAdmin
                 {...card}
                 onPress={() => handleCardPress(card, pub)}
                 onContact={() => handleContactPress(card, pub)}
@@ -547,19 +526,30 @@ const styles = StyleSheet.create({
   loadingText: { color: colors.textSecondary },
   emptyWrap: { padding: spacing.xl, alignItems: "center" },
   emptyText: { color: colors.textSecondary },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
+  allContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    padding: '1.5rem',
+    paddingTop: '.5rem',
   },
-  headerLeft: { flex: 1 },
+  upperDiv: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    gap: '1.5rem',
+    paddingTop: 5,
+    paddingBottom: 5,
+  },
+  iconBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   logo: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: colors.primary,
+    fontSize: 22,
+    fontWeight: "500",
+    color: colors.text,
     marginBottom: spacing.xs,
   },
   headerBadges: { flexDirection: "row", gap: spacing.xs, flexWrap: "wrap" },
@@ -590,14 +580,6 @@ const styles = StyleSheet.create({
   },
   badgeYellowText: { color: colors.primary, fontSize: 11, fontWeight: "500" },
   headerIcons: { flexDirection: "row", gap: 4 },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: colors.card,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   filtersSection: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,

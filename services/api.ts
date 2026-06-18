@@ -106,6 +106,30 @@ export async function logoutUser(): Promise<ApiResponse> {
   return res.json();
 }
 
+export async function forgotPassword(
+  email: string,
+): Promise<ApiResponse> {
+  const res = await fetch(getApiUrl("/api/v1/auth/forgot-password"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  return res.json();
+}
+
+export async function resetPassword(
+  token: string,
+  password: string
+): Promise<ApiResponse> {
+  const res = await fetch(getApiUrl("/api/v1/auth/reset-password"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+
+  return res.json();
+}
+
 // ——— Users ———
 
 /** Respuesta: { success, user } (user en raíz, no en data) */
@@ -295,6 +319,38 @@ export async function deletePublicacion(id: string): Promise<ApiResponse> {
   return res.json();
 }
 
+export async function addVista(
+  id: string,
+): Promise<ApiResponse> {
+  const headers = await authHeaders();
+
+  const res = await fetch(
+    getApiUrl(`/api/v1/publicaciones/${id}/vista`),
+    {
+      method: "POST",
+      headers,
+    }
+  );
+
+  return res.json();
+}
+
+export async function addContacto(
+  id: string,
+): Promise<ApiResponse> {
+  const headers = await authHeaders();
+
+  const res = await fetch(
+    getApiUrl(`/api/v1/publicaciones/${id}/contacto`),
+    {
+      method: "POST",
+      headers,
+    }
+  );
+
+  return res.json();
+}
+
 // ——— Metales ———
 
 export async function getMetales(): Promise<
@@ -352,4 +408,30 @@ export function formatTimeAgo(isoDate: string): string {
   if (diffH < 24) return `Hace ${diffH}h`;
   if (diffD < 7) return `Hace ${diffD}d`;
   return d.toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+}
+
+// ——— Admin ———
+
+export type AdminDashboardStats = {
+  users: number;
+  publicaciones: number;
+  ofertasActivas: number;
+  reportes: number;
+};
+
+export async function getAdminDashboardStats(): Promise<
+  ApiResponse & {
+    stats?: AdminDashboardStats;
+  }
+> {
+  const headers = await authHeaders();
+
+  const res = await fetch(
+    getApiUrl("/api/v1/admin/stats"),
+    {
+      headers,
+    }
+  );
+
+  return res.json();
 }

@@ -52,6 +52,21 @@ export default function TabLayout() {
             ),
           }}
         />
+        {/*<Tabs.Screen
+          name="industria"
+          options={{
+            title: "Industria",
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="storefront" size={size} color={color} />
+            ),
+          }}
+        />*/}
+        <Tabs.Screen
+          name="industria"
+          options={{
+            href: null,
+          }}
+        />
         <Tabs.Screen
           name="publicar"
           options={{

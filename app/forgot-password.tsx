@@ -16,39 +16,48 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, borderRadius } from "@/config/theme";
-import { loginUser, setSessionId, assertSuccess } from "@/services/api";
+import { loginUser, setSessionId, assertSuccess, forgotPassword } from "@/services/api";
 import { ensurePushTokenRegistered } from "@/services/pushNotifications";
 
-export default function LoginScreen() {
+
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleChange =async () => {
     const trimmedEmail = email.trim();
-    const trimmedPassword = password.trim();
-    if (!trimmedEmail || !trimmedPassword) {
-      Alert.alert("Error", "Ingresa email y contraseña");
+
+    if (!trimmedEmail) {
+      Alert.alert("Error", "Ingresá tu email");
       return;
     }
+
     setLoading(true);
+
     try {
-      const res = await loginUser(trimmedEmail, trimmedPassword);
+      const res = await forgotPassword(trimmedEmail);
       assertSuccess(res);
-      if (res.sessionId) {
-        await setSessionId(res.sessionId);
-      }
-      ensurePushTokenRegistered();
-      router.replace("/(tabs)");
+      Alert.alert(
+        "Listo",
+        res.message || "Si el email existe, se enviaron instrucciones",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace("/login"),
+          },
+        ]
+      );
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "No se pudo iniciar sesión";
+        err instanceof Error
+          ? err.message
+          : "Error de conexión con el servidor";
+
       Alert.alert("Error", message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -61,14 +70,25 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <TouchableOpacity
+            onPress={() => router.push("/")}
+            style={styles.backBtn}
+          >
+            <Ionicons 
+              name="arrow-back"
+              color={colors.textSecondary}
+              style={{ lineHeight: 20, textAlignVertical: "center" }}
+            />
+            <Text style={styles.footerLink}>Volver</Text>
+          </TouchableOpacity>
           <View style={styles.iconWrap}>
             <Image
               source={require("@/assets/images/icon.png")}
               style={styles.icon}
             />
           </View>
-          <Text style={styles.title}>Iniciar sesión</Text>
-          <Text style={styles.subtitle}>Ingresa a tu cuenta de MetalHub</Text>
+          <Text style={styles.title}>Cambia tu contraseña</Text>
+          <Text style={styles.subtitle}>Te enviaremos un enlace a tu correo electrónico</Text>
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -79,64 +99,17 @@ export default function LoginScreen() {
             keyboardType="email-address"
             editable={!loading}
           />
-          <View style={styles.passwordRow}>
-            <View style={styles.passwordWrapper}>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.passwordInput,
-                  styles.passwordInputNoBorder,
-                ]}
-                placeholder="Contraseña"
-                placeholderTextColor={colors.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                editable={!loading}
-              />
-              <TouchableOpacity
-                style={styles.passwordToggle}
-                onPress={() => setShowPassword((prev) => !prev)}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.textSecondary}
-                  style={{ lineHeight: 20, textAlignVertical: "center" }}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
           <TouchableOpacity
             style={styles.primaryBtn}
-            activeOpacity={0.8}
-            onPress={handleLogin}
             disabled={loading}
+            onPress={handleChange}
           >
             {loading ? (
               <ActivityIndicator color="#0D0D0F" />
             ) : (
-              <Text style={styles.primaryBtnText}>Entrar</Text>
+              <Text style={styles.primaryBtnText}>Enviar email</Text>
             )}
           </TouchableOpacity>
-          <View style={styles.footer}>
-            <View style={styles.footerDiv}>
-              <TouchableOpacity
-                onPress={() => router.replace("/forgot-password")}
-              >
-                <Text style={styles.footerLink}>Olvidé mi contraseña</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.footerDiv}>
-              <Text style={styles.footerText}>¿No tienes cuenta? </Text>
-              <TouchableOpacity
-                onPress={() => router.replace("/register")}
-                disabled={loading}
-              >
-                <Text style={styles.footerLink}>Regístrate</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -151,6 +124,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.xl,
     marginBottom: spacing.xl,
+  },
+  backBtn: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
   },
   icon: { width: 160, height: 160, borderRadius: 36 },
   title: {
@@ -214,15 +192,11 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: { color: "#0D0D0F", fontSize: 16, fontWeight: "700" },
   footer: {
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: "auto",
-    gap: 10,
-  },
-  footerDiv: {
     flexDirection: "row",
+    justifyContent: "center",
+    marginTop: "auto",
+    paddingVertical: spacing.lg,
   },
   footerText: { color: colors.textSecondary },
-  footerLink: { color: colors.primary, fontWeight: "600" },
+  footerLink: { color: colors.textSecondary, fontWeight: "600" },
 });

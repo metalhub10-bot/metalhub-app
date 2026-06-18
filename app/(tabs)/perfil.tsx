@@ -178,7 +178,18 @@ export default function PerfilScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Mi Perfil</Text>
+        <View style={styles.upperTitleAdmin}>
+          <Text style={styles.title}>Mi Perfil</Text>
+          {user.rol == 'superadmin' || user.rol == 'admin' ? (
+            <TouchableOpacity 
+              style={styles.navAdmin}
+              onPress={() => router.push("/(admin)")}
+            >  
+              <Text style={styles.navAdminText}>Admin</Text>
+              <Ionicons name="arrow-forward-outline" size={15} color={colors.text} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
         <View style={styles.profileCard}>
           <View style={styles.avatarWrap}>
             {user.avatarUrl ? (
@@ -289,6 +300,12 @@ export default function PerfilScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity
+          style={styles.changePassBtn}
+          onPress={() => router.push("/forgot-password")}
+        >
+          <Text style={styles.changePassText}>Cambiar contraseña</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.logoutBtn}
           onPress={handleLogout}
           disabled={loggingOut}
@@ -329,6 +346,27 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: colors.text,
     marginBottom: spacing.lg,
+  },
+  upperTitleAdmin: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  navAdmin: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '.3rem',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    paddingHorizontal: '.8rem',
+    height: '2.8rem',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)"
+  },
+  navAdminText: {
+    color: colors.text,
+    fontSize: 15,
   },
   loadingWrap: {
     flex: 1,
@@ -390,7 +428,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: borderRadius.sm,
   },
-  badgeRoleText: { color: "#0D0D0F", fontSize: 12, fontWeight: "600" },
+  badgeRoleText: { color: "#0D0D0F", fontSize: 12, fontWeight: "600", textTransform: 'capitalize' },
   badgeVerified: {
     flexDirection: "row",
     alignItems: "center",
@@ -454,11 +492,17 @@ const styles = StyleSheet.create({
   },
   menuItemText: { flex: 1, color: colors.text, fontSize: 16 },
   menuItemBadge: { color: colors.success, fontSize: 12, fontWeight: "600" },
-  logoutBtn: {
+  changePassBtn: {
     marginTop: spacing.lg,
     paddingVertical: spacing.md,
     alignItems: "center",
-    minHeight: 48,
+    minHeight: 40,
+    justifyContent: "center",
+  },
+  changePassText: { color: colors.primary, fontSize: 15, fontWeight: "600" },
+  logoutBtn: {
+    alignItems: "center",
+    minHeight: 40,
     justifyContent: "center",
   },
   logoutText: { color: colors.danger, fontSize: 15, fontWeight: "600" },
